@@ -291,7 +291,7 @@ test('recordsToCSV: BOM, Thai header, ="phone", source and auto-check columns', 
   assert.strictEqual(rows[2][0], '="021234567"');
   const autoIdx = header.indexOf('ตรวจอัตโนมัติ');
   for (let i = 1; i < rows.length; i++) assert.strictEqual(rows[i][autoIdx], C.AUTO_CHECK_TEXT);
-  assert.strictEqual(C.AUTO_CHECK_TEXT, 'ไม่สามารถตรวจสอบได้ — LINE ไม่มีช่องทางที่ได้รับอนุญาต');
+  assert.strictEqual(C.AUTO_CHECK_TEXT, 'ยังไม่สามารถตรวจสอบอัตโนมัติได้ — ยังไม่พบช่องทางที่ได้รับอนุญาตจาก LINE');
   const srcIdx = header.indexOf('ที่มา');
   assert.strictEqual(rows[1][srcIdx], 'อ่านจากภาพ (ผู้ใช้ยืนยัน)');
   assert.strictEqual(rows[2][srcIdx], 'ผู้ใช้กรอก');

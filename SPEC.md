@@ -5,7 +5,7 @@
   - หลักฐาน: https://developers.line.biz/en/reference/messaging-api/ , https://help.line.me/line/smartphone/?contentId=20000104&lang=en (ข้อความ "Please wait XX day(s)" แสดงเฉพาะในแอป, "these restrictions cannot be lifted"), https://help.line.me/line/?contentId=20000372 ("cannot provide details such as how long the restrictions will last"), https://help.line.me/line/?contentId=20001192&lang=en (สมัครด้วยเบอร์ที่มีบัญชีอยู่ → บัญชีเดิมถูกลบ), https://terms.line.me/line_terms?lang=en ข้อ 15 (ห้าม BOT/technical means, reverse engineering, เก็บข้อมูลบุคคลที่สามโดยมิชอบ)
   - LINE notification messages (PNP) เป็น API ส่งข้อความ ไม่ใช่ API ตรวจสอบ, ต้องเป็นนิติบุคคลที่ได้รับอนุมัติ, ห้ามใช้เชิงพาณิชย์, ส่งได้ครั้งละ 1 เบอร์
 - ดังนั้นเว็บนี้ **ห้าม** เรียกบริการภายนอกเพื่อตรวจเบอร์, ห้ามสร้างผลตรวจหรือจำนวนวันขึ้นเอง, ห้ามมีค่าตั้งต้นจำนวนวันรอ (เช่น 7 วัน) — จำนวนวันต้องมาจากผู้ใช้กรอก หรือจาก OCR ข้อความในภาพที่ผู้ใช้อัปโหลดแล้วผู้ใช้ยืนยัน
-- คอลัมน์ "ตรวจอัตโนมัติ" ของทุกรายการแสดงค่าคงที่: `ไม่สามารถตรวจสอบได้ — LINE ไม่มีช่องทางที่ได้รับอนุญาต` (มีลิงก์ไปแท็บ "ข้อจำกัด")
+- คอลัมน์ "ตรวจอัตโนมัติ" ของทุกรายการแสดงค่าคงที่: `ยังไม่สามารถตรวจสอบอัตโนมัติได้ — ยังไม่พบช่องทางที่ได้รับอนุญาตจาก LINE` (มีลิงก์ไปแท็บ "ข้อจำกัด")
 
 ## รูปแบบไฟล์
 - `index.html` ไฟล์เดียว: CSS + `<script id="core">` (ฟังก์ชันบริสุทธิ์ ไม่แตะ DOM, export ทั้ง `window.LineCore` และ `module.exports` ถ้ามี) + `<script id="app">` (UI)
