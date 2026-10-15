@@ -1,0 +1,2291 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>จัดการเบอร์ LINE</title>
+<meta name="color-scheme" content="light dark">
+<style>
+*, *::before, *::after { box-sizing: border-box; }
+:root {
+  color-scheme: light dark;
+  --bg: #f4f6f8; --surface: #ffffff; --surface-2: #f0f3f6; --text: #18202a; --muted: #5a6573; --border: #d9dfe6;
+  --accent: #0a7556; --accent-hover: #075f45; --accent-soft: #e2f3ec; --on-accent: #ffffff;
+  --danger: #b93226; --danger-soft: #fdecea; --on-danger: #ffffff; --warn: #7a5000; --warn-soft: #fff3d6; --warn-border: #f0d48a;
+  --info: #1f4f8f; --info-soft: #e7effb; --ok: #16743a; --ok-soft: #e3f4e9; --neutral-soft: #eceff3;
+  --focus: #2b6cdf; --radius: 12px; --radius-sm: 8px;
+  --shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 1px 3px rgba(16, 24, 40, .08);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1318; --surface: #171c23; --surface-2: #1e252e; --text: #e6eaef; --muted: #9ba6b3; --border: #2d3542;
+    --accent: #3cc493; --accent-hover: #5ad4a7; --accent-soft: #123528; --on-accent: #04241a;
+    --danger: #ff8378; --danger-soft: #3b1d1b; --on-danger: #2a0905; --warn: #f3c652; --warn-soft: #362c10; --warn-border: #6a5418;
+    --info: #92bcff; --info-soft: #172740; --ok: #67d692; --ok-soft: #13301f; --neutral-soft: #262d37;
+    --focus: #92bcff; --shadow: 0 1px 2px rgba(0, 0, 0, .45);
+  }
+}
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--text); line-height: 1.55; font-size: 15px;
+  font-family: system-ui, -apple-system, "Segoe UI", "Noto Sans Thai", "Leelawadee UI", "Sukhumvit Set", Tahoma, sans-serif;
+}
+a { color: var(--info); }
+h1, h2, h3 { line-height: 1.3; margin: 0 0 .5em; }
+h2 { font-size: 1.15rem; }
+h3 { font-size: 1rem; }
+p { margin: 0 0 .75em; }
+img { max-width: 100%; height: auto; }
+.wrap { max-width: 1160px; margin: 0 auto; padding: 0 16px; }
+.visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.skip { position: absolute; left: -9999px; }
+.skip:focus { left: 16px; top: 8px; background: var(--surface); padding: 8px 12px; z-index: 50; }
+.muted { color: var(--muted); }
+.small { font-size: 12.5px; }
+.hint { color: var(--muted); font-size: 13.5px; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+/* header + banners */
+.app-header { padding: 18px 0 10px; }
+.app-header h1 { font-size: 1.4rem; margin: 0; }
+.app-header .sub { margin: 2px 0 0; color: var(--muted); font-size: 14px; }
+.banner { border-radius: var(--radius-sm); padding: 10px 14px; margin: 10px 0; font-size: 14px; border: 1px solid transparent; overflow-wrap: anywhere; }
+.banner-honest { background: var(--info-soft); color: var(--text); border-color: color-mix(in srgb, var(--info) 30%, transparent); }
+.banner-warn { background: var(--warn-soft); color: var(--text); border-color: var(--warn-border); }
+.banner-danger { background: var(--danger-soft); color: var(--text); border-color: color-mix(in srgb, var(--danger) 35%, transparent); }
+.banner strong { color: inherit; }
+
+/* tabs */
+.tabs { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid var(--border); margin: 6px 0 16px; }
+.tabs::-webkit-scrollbar { display: none; }
+.tabs a { flex: 0 0 auto; padding: 10px 14px; color: var(--muted); text-decoration: none; font-weight: 600; font-size: 14.5px; border-bottom: 3px solid transparent; white-space: nowrap; }
+.tabs a:hover { color: var(--text); }
+.tabs a[aria-current="page"] { color: var(--accent); border-bottom-color: var(--accent); }
+.tab-count { display: inline-block; min-width: 20px; padding: 0 6px; margin-left: 4px; border-radius: 999px; background: var(--danger); color: var(--on-danger); font-size: 12px; line-height: 20px; text-align: center; }
+main { padding-bottom: 48px; }
+
+/* cards, controls */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; box-shadow: var(--shadow); min-width: 0; }
+label { display: block; font-size: 13.5px; color: var(--muted); font-weight: 600; }
+input[type="text"], input[type="search"], input[type="number"], input[type="date"], select, textarea {
+  display: block; width: 100%; min-width: 0; margin-top: 4px; padding: 9px 11px; font: inherit; font-weight: 400; color: var(--text);
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); min-height: 42px;
+}
+textarea { resize: vertical; line-height: 1.5; }
+input:focus, select:focus, textarea:focus { border-color: var(--focus); outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 25%, transparent); }
+input[type="file"] { max-width: 100%; font: inherit; color: var(--text); }
+input[type="checkbox"], input[type="radio"] { width: 18px; height: 18px; accent-color: var(--accent); vertical-align: -3px; margin: 0; }
+label.check, .radio-row label { display: inline-flex; align-items: center; gap: 8px; color: var(--text); font-weight: 400; }
+fieldset { border: 0; padding: 0; margin: 12px 0; min-width: 0; }
+legend { font-size: 13.5px; color: var(--muted); font-weight: 600; padding: 0; margin-bottom: 6px; }
+.radio-row { display: flex; flex-wrap: wrap; gap: 8px 20px; }
+button {
+  font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; border-radius: var(--radius-sm); padding: 9px 14px; min-height: 40px;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text); line-height: 1.2;
+}
+button:hover:not(:disabled) { background: var(--surface-2); }
+button:disabled { opacity: .5; cursor: not-allowed; }
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+button.primary:hover:not(:disabled) { background: var(--accent-hover); }
+button.danger { background: var(--danger); border-color: var(--danger); color: var(--on-danger); }
+button.danger:hover:not(:disabled) { filter: brightness(1.08); background: var(--danger); }
+button.danger-ghost { color: var(--danger); }
+button.sm { padding: 6px 10px; min-height: 34px; font-size: 13px; }
+button.link { border: 0; background: none; color: var(--info); padding: 4px 2px; min-height: 0; text-decoration: underline; }
+button.link:hover:not(:disabled) { background: none; }
+button.chip { padding: 4px 10px; min-height: 32px; border-radius: 999px; font-weight: 600; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; align-items: center; }
+.row2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+.field { margin-top: 12px; }
+.inline-btns { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.form-error { color: var(--danger); font-size: 14px; margin: 8px 0 0; min-height: 0; }
+.form-error:empty { display: none; }
+
+/* badges */
+.badge { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12.5px; font-weight: 600; line-height: 20px; white-space: nowrap; background: var(--neutral-soft); color: var(--text); }
+.st-unrecorded { background: var(--neutral-soft); color: var(--muted); }
+.st-verified { background: var(--ok-soft); color: var(--ok); }
+.st-waiting { background: var(--warn-soft); color: var(--warn); }
+.st-failed { background: var(--danger-soft); color: var(--danger); }
+.src { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+.src-ocr { border-color: color-mix(in srgb, var(--info) 45%, transparent); color: var(--info); }
+.src-import { border-color: color-mix(in srgb, var(--accent) 45%, transparent); color: var(--accent); }
+.due-overdue { background: var(--danger); color: var(--on-danger); }
+.due-today { background: var(--warn-soft); color: var(--warn); border: 1px solid var(--warn-border); }
+.due-soon { background: var(--info-soft); color: var(--info); }
+.due-later { background: var(--neutral-soft); color: var(--muted); }
+.kind-new { background: var(--ok-soft); color: var(--ok); }
+.kind-dup { background: var(--neutral-soft); color: var(--muted); }
+.kind-over { background: var(--info-soft); color: var(--info); }
+.kind-invalid { background: var(--danger-soft); color: var(--danger); }
+.badge.warn { background: var(--warn-soft); color: var(--warn); }
+
+/* list tab */
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px; }
+.stat { text-align: left; padding: 12px 14px; border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow); min-height: 0; display: block; width: 100%; }
+.stat .n { display: block; font-size: 1.6rem; font-weight: 700; line-height: 1.15; }
+.stat .l { display: block; font-size: 13px; color: var(--muted); font-weight: 600; }
+.stat.is-due .n { color: var(--danger); }
+.stat.is-soon .n { color: var(--info); }
+.stat.is-wait .n { color: var(--warn); }
+@media (max-width: 559.98px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.due-box { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.due-col { margin: 0; }
+.due-col h3 { display: flex; align-items: center; gap: 8px; }
+.due-list { list-style: none; margin: 0; padding: 0; }
+.due-list li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 8px 0; border-top: 1px solid var(--border); }
+.due-list li:first-child { border-top: 0; }
+.due-list .who { flex: 1 1 160px; min-width: 0; overflow-wrap: anywhere; }
+.due-empty { padding: 12px 16px; }
+.phone { font-variant-numeric: tabular-nums; font-weight: 700; letter-spacing: .01em; white-space: nowrap; }
+.filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.f-search { grid-column: span 2; }
+@media (max-width: 479.98px) { .f-search { grid-column: 1 / -1; } }
+.filter-foot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; margin-top: 10px; font-size: 13.5px; color: var(--muted); }
+.bulkbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 10px 14px; margin-bottom: 12px; border-radius: var(--radius); background: var(--surface-2); border: 1px solid var(--border); }
+.bulkbar .bulk-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; align-items: center; }
+.bulkbar select { width: auto; margin: 0; min-height: 40px; max-width: 100%; }
+#sel-count { font-size: 13.5px; color: var(--muted); }
+.table-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+table.grid { width: 100%; border-collapse: collapse; font-size: 14px; }
+.grid th, .grid td { padding: 10px 12px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--border); }
+.grid tr:last-child td { border-bottom: 0; }
+.grid th { font-size: 12.5px; color: var(--muted); font-weight: 600; background: var(--surface-2); white-space: nowrap; }
+.grid td { overflow-wrap: anywhere; }
+.grid tr.is-selected td { background: var(--accent-soft); }
+.grid .c-sel { width: 36px; }
+.grid .c-msg { min-width: 160px; max-width: 280px; }
+.grid .c-auto { min-width: 130px; max-width: 150px; font-size: 12px; line-height: 1.4; }
+.grid .c-auto a { color: var(--muted); }
+.row-actions { display: flex; flex-direction: column; gap: 6px; min-width: 108px; }
+.grid .c-nw { white-space: nowrap; }
+@media (min-width: 640px) {
+  .records td.c-act, .records th.c-act { position: sticky; right: 0; background: var(--surface); box-shadow: -1px 0 0 var(--border); }
+  .records th.c-act { background: var(--surface-2); }
+  .records tr.is-selected td.c-act { background: var(--accent-soft); }
+  .records .c-note { min-width: 110px; }
+}
+.grid .c-nw .small { white-space: normal; min-width: 88px; }
+.clamp { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; white-space: pre-line; }
+.err { color: var(--danger); }
+.empty { text-align: center; padding: 32px 16px; color: var(--muted); }
+.empty .actions { justify-content: center; }
+@media (max-width: 639.98px) {
+  .table-wrap { overflow: visible; background: none; border: 0; box-shadow: none; border-radius: 0; }
+  table.grid, .grid tbody, .grid tr, .grid td { display: block; width: 100%; }
+  .grid thead { display: none; }
+  .grid tr { position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px 10px; margin-bottom: 12px; box-shadow: var(--shadow); }
+  .grid tr.is-selected { border-color: var(--accent); }
+  .grid tr.is-selected td { background: none; }
+  .grid td { border: 0; padding: 4px 0; display: grid; grid-template-columns: 7.2em minmax(0, 1fr); gap: 8px; max-width: none !important; min-width: 0 !important; }
+  .grid td::before { content: attr(data-label); color: var(--muted); font-size: 12.5px; font-weight: 600; padding-top: 2px; }
+  .grid td.c-sel { position: absolute; top: 12px; right: 12px; width: auto; display: block; padding: 0; }
+  .grid td.c-head { display: block; font-size: 1.1rem; padding-right: 36px; }
+  .grid td.c-sel::before, .grid td.c-head::before, .grid td.c-act::before { content: none; }
+  .grid td.c-act { display: block; padding-top: 10px; }
+  .row-actions { min-width: 0; flex-direction: row; flex-wrap: wrap; }
+  .grid .c-nw { white-space: normal; }
+  .row-actions button { flex: 1 1 auto; }
+}
+
+/* add tab previews */
+.summary-line { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
+.preview-wrap { max-height: 420px; overflow: auto; border-radius: var(--radius-sm); }
+@media (max-width: 639.98px) { .preview-wrap { max-height: none; } }
+.issues { margin: 10px 0 0; padding-left: 20px; font-size: 13.5px; }
+.issues li { margin: 2px 0; overflow-wrap: anywhere; }
+
+/* OCR */
+.dropzone { border: 2px dashed var(--border); border-radius: var(--radius); padding: 24px 16px; text-align: center; background: var(--surface); transition: border-color .15s, background .15s; }
+.dropzone.is-over { border-color: var(--accent); background: var(--accent-soft); }
+.dropzone p { margin: 6px 0; }
+.ocr-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 16px; box-shadow: var(--shadow); min-width: 0; }
+.ocr-top { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+.ocr-top .name { font-weight: 700; flex: 1 1 160px; min-width: 0; overflow-wrap: anywhere; }
+.ocr-body { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 16px; }
+@media (min-width: 760px) { .ocr-body { grid-template-columns: minmax(0, 300px) minmax(0, 1fr); } }
+.ocr-img { margin: 0; background: var(--surface-2); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; padding: 6px; }
+.ocr-img img { max-height: 460px; object-fit: contain; border-radius: 4px; }
+.ocr-col { min-width: 0; }
+.ocr-text textarea { font-size: 14px; min-height: 140px; }
+.progress { height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; margin: 8px 0; }
+.progress .bar { height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+.ocr-result { padding: 0 16px 16px; }
+.ocr-result h3 { margin-top: 4px; }
+.ocr-result .grid input[type="text"] { margin: 0; min-width: 140px; }
+@media (max-width: 639.98px) { .ocr-result .grid input[type="text"] { min-width: 0; } }
+.conf { font-weight: 700; }
+.saved-note { background: var(--ok-soft); color: var(--ok); border-radius: var(--radius-sm); padding: 8px 12px; font-weight: 600; margin-top: 10px; }
+
+/* export */
+.export-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.export-item { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column; gap: 8px; background: var(--surface-2); min-width: 0; }
+.export-item .count { font-size: 1.4rem; font-weight: 700; }
+.export-item p { margin: 0; overflow-wrap: anywhere; }
+.export-item button { margin-top: auto; }
+
+/* limits */
+.prose { max-width: 820px; }
+.prose li { margin-bottom: 10px; }
+.evidence a { overflow-wrap: anywhere; }
+.danger-zone { border-color: color-mix(in srgb, var(--danger) 40%, var(--border)); }
+
+/* dialogs */
+dialog { width: min(580px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); overflow: auto; border: 0; border-radius: 16px; padding: 0; background: var(--surface); color: var(--text); box-shadow: 0 20px 50px rgba(0, 0, 0, .3); }
+dialog::backdrop { background: rgba(10, 14, 20, .55); }
+.dlg-body { padding: 18px 18px 8px; }
+.dlg-body h2 { font-size: 1.1rem; overflow-wrap: anywhere; }
+.dlg-actions { position: sticky; bottom: 0; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; padding: 12px 18px 16px; background: var(--surface); border-top: 1px solid var(--border); }
+
+/* toasts */
+.toasts { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); width: min(480px, calc(100vw - 32px)); display: flex; flex-direction: column; gap: 8px; z-index: 100; pointer-events: none; }
+.toast { background: var(--text); color: var(--bg); padding: 10px 14px; border-radius: var(--radius-sm); box-shadow: 0 6px 20px rgba(0, 0, 0, .25); font-size: 14px; overflow-wrap: anywhere; pointer-events: auto; }
+.toast.error { background: var(--danger); color: var(--on-danger); }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">ข้ามไปที่เนื้อหา</a>
+<header class="app-header">
+  <div class="wrap">
+    <h1>จัดการเบอร์ LINE</h1>
+    <p class="sub">จดผลยืนยันเบอร์ที่คุณเห็นในแอป LINE เอง และนัดวันตรวจซ้ำ</p>
+  </div>
+</header>
+<div class="wrap">
+  <div class="banner banner-honest" role="note">
+    <strong>เว็บนี้ไม่ได้ตรวจสถานะเบอร์กับ LINE</strong> — ผลทุกรายการมาจากที่คุณกรอกเอง นำเข้าจาก CSV หรือข้อความในภาพที่คุณยืนยัน เพราะ LINE ไม่มีช่องทางที่ได้รับอนุญาตให้ตรวจ <a href="#limits">ดูเหตุผลและหลักฐาน</a>
+  </div>
+  <div class="banner banner-warn" id="storage-banner" role="alert" hidden>
+    <strong>ข้อมูลจะหายเมื่อปิดหน้า — ส่งออก CSV ไว้</strong> <span id="storage-detail"></span> <a href="#export">ไปหน้าส่งออก</a>
+  </div>
+  <nav class="tabs" aria-label="เมนูหลัก">
+    <a href="#list" data-tab="list">รายการเบอร์<span class="tab-count" id="tab-due-count" hidden></span></a>
+    <a href="#add" data-tab="add">เพิ่มเบอร์</a>
+    <a href="#ocr" data-tab="ocr">อ่านจากภาพ (OCR)</a>
+    <a href="#export" data-tab="export">ส่งออก</a>
+    <a href="#limits" data-tab="limits">ข้อจำกัด</a>
+  </nav>
+</div>
+
+<main id="main" class="wrap" tabindex="-1">
+  <!-- 1. รายการเบอร์ -->
+  <section id="tab-list" data-panel="list" aria-labelledby="h-list">
+    <h2 id="h-list" class="visually-hidden">รายการเบอร์</h2>
+    <div class="stats" id="stats"></div>
+    <div class="due-box" id="due-box"></div>
+    <div class="card">
+      <div class="filter-grid">
+        <label class="f-search">ค้นหา
+          <input type="search" id="f-q" placeholder="เบอร์ ชื่อ หรือข้อความ" autocomplete="off">
+        </label>
+        <label>สถานะ <select id="f-status"></select></label>
+        <label>ที่มา <select id="f-source"></select></label>
+        <label>กำหนดตรวจซ้ำ <select id="f-due"></select></label>
+        <label>เรียงตาม <select id="f-sort"></select></label>
+        <label>“ใกล้ถึงกำหนด” = ภายในกี่วัน
+          <input type="number" id="f-soon" min="0" max="365" step="1" inputmode="numeric">
+        </label>
+      </div>
+      <div class="filter-foot">
+        <span id="f-count" aria-live="polite"></span>
+        <button type="button" class="link" data-action="filters-reset">ล้างตัวกรอง</button>
+      </div>
+    </div>
+    <div class="bulkbar" id="bulkbar">
+      <label class="check"><input type="checkbox" id="sel-all"> เลือกทั้งหมดที่แสดง</label>
+      <span id="sel-count">ยังไม่ได้เลือก</span>
+      <div class="bulk-actions">
+        <select id="bulk-status" aria-label="สถานะใหม่สำหรับรายการที่เลือก"></select>
+        <button type="button" data-action="bulk-status" id="bulk-status-btn" disabled>เปลี่ยนสถานะ</button>
+        <button type="button" class="danger" data-action="bulk-delete" id="bulk-delete-btn" disabled>ลบที่เลือก</button>
+      </div>
+    </div>
+    <div id="table-wrap" class="table-wrap"></div>
+  </section>
+
+  <!-- 2. เพิ่มเบอร์ -->
+  <section id="tab-add" data-panel="add" aria-labelledby="h-add" hidden>
+    <h2 id="h-add" class="visually-hidden">เพิ่มเบอร์</h2>
+    <div class="card">
+      <h2>วางหลายเบอร์</h2>
+      <p class="hint">หนึ่งเบอร์ต่อบรรทัด หรือคั่นด้วย , ; หรือแท็บ — รับรูปแบบ 081-234-5678, (02) 123 4567, +66 81 234 5678 และเลขไทย</p>
+      <label for="paste-text">เบอร์ที่ต้องการเพิ่ม</label>
+      <textarea id="paste-text" rows="6" placeholder="0812345678&#10;+66 89 123 4567&#10;๐๘๑-๒๓๔-๕๖๗๘"></textarea>
+      <div class="field">
+        <label for="paste-note">ชื่อ/หมายเหตุ ใส่ให้ทุกเบอร์ที่เพิ่ม (ไม่บังคับ)</label>
+        <input type="text" id="paste-note" autocomplete="off">
+      </div>
+      <div class="actions">
+        <button type="button" class="primary" data-action="paste-preview">ตรวจรูปแบบเบอร์</button>
+        <button type="button" data-action="paste-clear">ล้าง</button>
+      </div>
+      <div id="paste-preview"></div>
+    </div>
+    <div class="card">
+      <h2>นำเข้าไฟล์ CSV</h2>
+      <p class="hint">รู้จักหัวคอลัมน์ที่เว็บนี้ส่งออก และชื่อทั่วไป เช่น phone, เบอร์, เบอร์โทร, tel, mobile — ถ้าไฟล์ไม่มีหัวคอลัมน์ จะใช้คอลัมน์แรกเป็นเบอร์ ข้อมูลในไฟล์ถือเป็น “นำเข้า CSV” ไม่ใช่ผลตรวจจาก LINE</p>
+      <label for="csv-file">เลือกไฟล์ .csv</label>
+      <input type="file" id="csv-file" accept=".csv,text/csv,text/plain">
+      <fieldset class="radio-row">
+        <legend>ถ้าเบอร์ในไฟล์มีอยู่แล้วในรายการ</legend>
+        <label><input type="radio" name="csv-mode" value="skip" checked> ข้าม (เก็บข้อมูลเดิม)</label>
+        <label><input type="radio" name="csv-mode" value="overwrite"> เขียนทับด้วยข้อมูลในไฟล์</label>
+      </fieldset>
+      <div id="csv-preview"></div>
+    </div>
+  </section>
+
+  <!-- 3. อ่านจากภาพ -->
+  <section id="tab-ocr" data-panel="ocr" aria-labelledby="h-ocr" hidden>
+    <h2 id="h-ocr" class="visually-hidden">อ่านจากภาพ (OCR)</h2>
+    <div class="banner banner-warn" role="note">
+      <strong>ไม่ใช่การตรวจสถานะอัตโนมัติ อ่านเฉพาะข้อความในภาพของคุณ</strong><br>
+      <strong>อย่าอัปโหลดภาพที่มีรหัส OTP</strong> — ภาพถูกอ่านในเบราว์เซอร์นี้ ไม่ถูกส่งไปที่ใดและไม่ถูกเก็บไว้ (ครั้งแรกจะดาวน์โหลดตัวอ่านข้อความ Tesseract.js และข้อมูลภาษาไทย+อังกฤษจาก jsDelivr)
+    </div>
+    <div class="dropzone" id="dropzone">
+      <p><strong>ลากภาพหน้าจอมาวางที่นี่</strong></p>
+      <p><button type="button" class="primary" data-action="ocr-pick">เลือกภาพ</button></p>
+      <p class="hint">หรือวางจากคลิปบอร์ด (Ctrl+V / ⌘V) ขณะอยู่ที่แท็บนี้ · เลือกได้หลายภาพ · PNG, JPG, WebP, BMP</p>
+      <input type="file" id="ocr-file" accept="image/png,image/jpeg,image/webp,image/bmp,image/*" multiple hidden>
+    </div>
+    <p id="ocr-global" class="hint" aria-live="polite"></p>
+    <div class="actions" id="ocr-tools" hidden>
+      <button type="button" data-action="ocr-clear">ล้างภาพทั้งหมด</button>
+    </div>
+    <div id="ocr-list"></div>
+  </section>
+
+  <!-- 4. ส่งออก -->
+  <section id="tab-export" data-panel="export" aria-labelledby="h-export" hidden>
+    <div class="card">
+      <h2 id="h-export">ส่งออก CSV</h2>
+      <p class="hint">เปิดได้ด้วย Excel หรือ Google Sheets — เบอร์เขียนเป็น ="0812345678" เพื่อให้คงเลข 0 ด้านหน้า มีคอลัมน์ “ที่มา” และ “ตรวจอัตโนมัติ” และนำกลับเข้ามาที่แท็บ “เพิ่มเบอร์” ได้ครบทุกช่อง</p>
+      <div class="export-grid" id="export-grid"></div>
+    </div>
+  </section>
+
+  <!-- 5. ข้อจำกัด -->
+  <section id="tab-limits" data-panel="limits" aria-labelledby="h-limits" hidden>
+    <div class="card prose">
+      <h2 id="h-limits">ทำไมเว็บนี้ตรวจสถานะเบอร์ให้อัตโนมัติไม่ได้</h2>
+      <p>สรุปผลการวิเคราะห์ 5 ข้อ พร้อมหลักฐานจาก LINE เอง:</p>
+      <ol class="evidence">
+        <li><strong>LINE ไม่มี API หรือช่องทางที่ได้รับอนุญาตสำหรับตรวจสถานะการยืนยันเบอร์ หรือจำนวนวันที่ต้องรอ และตรวจหลายเบอร์ไม่ได้</strong> — Messaging API มีไว้รับส่งข้อความของบัญชีทางการ ส่วน LINE notification messages (PNP) เป็น API สำหรับส่งข้อความ ไม่ใช่ API ตรวจสอบ ต้องเป็นนิติบุคคลที่ได้รับอนุมัติ ห้ามใช้เชิงพาณิชย์ และส่งได้ครั้งละ 1 เบอร์<br>
+          <a href="https://developers.line.biz/en/reference/messaging-api/" target="_blank" rel="noopener noreferrer">developers.line.biz — Messaging API reference</a></li>
+        <li><strong>ข้อความ “Please wait XX day(s)” แสดงเฉพาะในแอป LINE</strong> และ LINE ระบุว่า “these restrictions cannot be lifted”<br>
+          <a href="https://help.line.me/line/smartphone/?contentId=20000104&amp;lang=en" target="_blank" rel="noopener noreferrer">help.line.me — contentId 20000104</a></li>
+        <li><strong>LINE ไม่เปิดเผยว่าการจำกัดจะนานเท่าใด</strong> — “cannot provide details such as how long the restrictions will last” จึงไม่มีจำนวนวันตั้งต้นที่ถูกต้อง เว็บนี้ไม่เดาให้<br>
+          <a href="https://help.line.me/line/?contentId=20000372" target="_blank" rel="noopener noreferrer">help.line.me — contentId 20000372</a></li>
+        <li><strong>อย่า “ทดสอบ” เบอร์ด้วยการลองสมัคร</strong> — การสมัครด้วยเบอร์ที่มีบัญชี LINE อยู่แล้ว ทำให้บัญชีเดิมถูกลบ<br>
+          <a href="https://help.line.me/line/?contentId=20001192&amp;lang=en" target="_blank" rel="noopener noreferrer">help.line.me — contentId 20001192</a></li>
+        <li><strong>ข้อกำหนดการใช้งาน LINE ข้อ 15</strong> ห้ามใช้ BOT หรือวิธีการทางเทคนิค (technical means), ห้าม reverse engineering และห้ามเก็บข้อมูลของบุคคลที่สามโดยมิชอบ — การเขียนโปรแกรมไปตรวจเบอร์แทนผู้ใช้จึงขัดข้อกำหนด<br>
+          <a href="https://terms.line.me/line_terms?lang=en" target="_blank" rel="noopener noreferrer">terms.line.me — LINE Terms and Conditions of Use</a></li>
+      </ol>
+      <h3>เว็บนี้จึงทำเท่าที่ทำได้อย่างซื่อตรง</h3>
+      <ul>
+        <li>ไม่เรียกบริการภายนอกเพื่อตรวจเบอร์ และไม่สร้างผลตรวจหรือจำนวนวันรอขึ้นเอง ไม่มีค่าตั้งต้นจำนวนวัน</li>
+        <li>จำนวนวันรอมาจากที่คุณกรอก หรือจากข้อความในภาพที่คุณอัปโหลดแล้วยืนยันเอง</li>
+        <li>คอลัมน์ “ตรวจอัตโนมัติ” ทุกแถวแสดง “ไม่สามารถตรวจสอบได้ — LINE ไม่มีช่องทางที่ได้รับอนุญาต” และทุกรายการบอก “ที่มา” ของผลล่าสุด</li>
+        <li>ข้อมูลเก็บในเบราว์เซอร์นี้เท่านั้น (localStorage) ไม่เก็บรูปภาพ ไม่มีช่องรหัสผ่านหรือ OTP</li>
+      </ul>
+    </div>
+    <div class="card danger-zone">
+      <h2>ล้างข้อมูลทั้งหมด</h2>
+      <p>ลบทุกเบอร์ที่บันทึกไว้ในเบราว์เซอร์นี้ ย้อนกลับไม่ได้ — แนะนำให้ส่งออก CSV ไว้ก่อน</p>
+      <button type="button" class="danger" data-action="wipe-all" id="wipe-btn">ล้างข้อมูลทั้งหมด</button>
+    </div>
+  </section>
+</main>
+
+<!-- dialogs (in-page only) -->
+<dialog id="dlg-confirm" aria-labelledby="confirm-title">
+  <form method="dialog">
+    <div class="dlg-body">
+      <h2 id="confirm-title"></h2>
+      <p id="confirm-msg"></p>
+    </div>
+    <div class="dlg-actions">
+      <button type="submit" value="cancel">ยกเลิก</button>
+      <button type="submit" value="ok" id="confirm-ok" class="primary">ยืนยัน</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlg-result" aria-labelledby="result-title">
+  <form id="form-result" novalidate>
+    <div class="dlg-body">
+      <h2 id="result-title">บันทึกผลตรวจ <span class="phone" id="result-phone"></span></h2>
+      <p class="hint">กรอกตามที่คุณเห็นในแอป LINE เอง — เว็บนี้ไม่ได้ตรวจกับ LINE ผลที่บันทึกจะมีที่มาเป็น “ผู้ใช้กรอก”</p>
+      <label>สถานะ <select name="status"></select></label>
+      <div class="field">
+        <label>ข้อความตอบกลับที่เห็นในแอป LINE
+          <textarea name="message" rows="3" placeholder="คัดลอกข้อความจากแอป LINE (ไม่บังคับ)"></textarea>
+        </label>
+      </div>
+      <div class="row2 field">
+        <label>จำนวนวันรอ
+          <input type="number" name="waitDays" min="0" max="3650" step="1" inputmode="numeric" placeholder="เว้นว่างได้">
+        </label>
+        <div>
+          <label>วันที่เห็นข้อความ <input type="date" name="waitStart"></label>
+          <div class="inline-btns"><button type="button" class="sm" data-result-act="today">วันนี้</button><button type="button" class="sm" data-result-act="clear-start">ล้าง</button></div>
+        </div>
+      </div>
+      <div class="field">
+        <label>วันนัดตรวจซ้ำ (คำนวณให้ หรือแก้เองได้) <input type="date" name="recheckDate"></label>
+        <p class="hint" id="result-calc"></p>
+        <div class="inline-btns"><button type="button" class="sm" data-result-act="use-calc" id="result-use-calc" hidden>ใช้ค่าที่คำนวณ</button></div>
+      </div>
+      <div class="field">
+        <label>ข้อผิดพลาด / สาเหตุ
+          <textarea name="error" rows="2" placeholder="ไม่บังคับ"></textarea>
+        </label>
+      </div>
+      <p class="form-error" id="result-err" role="alert"></p>
+    </div>
+    <div class="dlg-actions">
+      <button type="button" data-close>ยกเลิก</button>
+      <button type="submit" class="primary">บันทึกผล</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlg-edit" aria-labelledby="edit-title">
+  <form id="form-edit" novalidate>
+    <div class="dlg-body">
+      <h2 id="edit-title">แก้ไขเบอร์</h2>
+      <label>เบอร์โทร <input type="text" name="phone" inputmode="tel" autocomplete="off"></label>
+      <p class="hint" id="edit-phone-hint"></p>
+      <div class="field">
+        <label>ชื่อ/หมายเหตุ <input type="text" name="note" autocomplete="off"></label>
+      </div>
+      <p class="form-error" id="edit-err" role="alert"></p>
+    </div>
+    <div class="dlg-actions">
+      <button type="button" data-close>ยกเลิก</button>
+      <button type="submit" class="primary">บันทึก</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toasts" id="toasts" aria-live="polite" aria-atomic="false"></div>
+<script id="core">
+(function () {
+  'use strict';
+
+  // ---------- constants ----------
+  var STORAGE_KEY = 'lnm.v1';
+  var STATUSES = ['unrecorded', 'verified', 'waiting', 'failed'];
+  var SOURCES = ['manual', 'ocr', 'import'];
+  var STATUS_LABELS = {
+    unrecorded: 'ยังไม่บันทึกผล',
+    verified: 'ยืนยันสำเร็จ',
+    waiting: 'ต้องรอ',
+    failed: 'ยืนยันไม่สำเร็จ/ข้อผิดพลาด'
+  };
+  var SOURCE_LABELS = {
+    manual: 'ผู้ใช้กรอก',
+    ocr: 'อ่านจากภาพ (ผู้ใช้ยืนยัน)',
+    import: 'นำเข้า CSV'
+  };
+  var AUTO_CHECK_TEXT = 'ไม่สามารถตรวจสอบได้ — LINE ไม่มีช่องทางที่ได้รับอนุญาต';
+  var WARN_ADDED_ZERO = 'เติมเลข 0 ด้านหน้าที่หายไป';
+  var DEFAULT_SOON_DAYS = 3; // settings.soonDays default per SPEC (not a wait-days default)
+
+  // CSV columns: [field, Thai header]
+  var CSV_COLUMNS = [
+    ['phone', 'เบอร์โทร'],
+    ['note', 'ชื่อ/หมายเหตุ'],
+    ['status', 'สถานะ'],
+    ['message', 'ข้อความตอบกลับ'],
+    ['error', 'ข้อผิดพลาด'],
+    ['waitDays', 'จำนวนวันรอ'],
+    ['waitStart', 'วันที่เห็นข้อความ'],
+    ['recheckDate', 'วันนัดตรวจซ้ำ'],
+    ['source', 'ที่มา'],
+    ['checkedAt', 'เวลาบันทึกผล'],
+    ['autoCheck', 'ตรวจอัตโนมัติ']
+  ];
+  var CSV_HEADERS = CSV_COLUMNS.map(function (c) { return c[1]; });
+
+  // Header aliases, in priority order (lower index wins when several columns map to one field)
+  var HEADER_ALIASES = {
+    phone: ['เบอร์โทร', 'เบอร์', 'เบอร์โทรศัพท์', 'หมายเลขโทรศัพท์', 'เบอร์มือถือ', 'phone', 'phonenumber', 'tel', 'telephone', 'mobile', 'mobilenumber'],
+    note: ['ชื่อ/หมายเหตุ', 'หมายเหตุ', 'note', 'notes', 'ชื่อ', 'name'],
+    status: ['สถานะ', 'status'],
+    message: ['ข้อความตอบกลับ', 'ข้อความ', 'message'],
+    error: ['ข้อผิดพลาด', 'สาเหตุ', 'error'],
+    waitDays: ['จำนวนวันรอ', 'วันรอ', 'waitdays'],
+    waitStart: ['วันที่เห็นข้อความ', 'waitstart'],
+    recheckDate: ['วันนัดตรวจซ้ำ', 'recheckdate'],
+    source: ['ที่มา', 'source'],
+    checkedAt: ['เวลาบันทึกผล', 'checkedat'],
+    autoCheck: ['ตรวจอัตโนมัติ']
+  };
+  var RECORD_FIELDS = ['note', 'status', 'message', 'error', 'waitDays', 'waitStart', 'recheckDate', 'source', 'checkedAt'];
+  var RESULT_FIELDS = ['status', 'message', 'error', 'waitDays', 'waitStart', 'recheckDate', 'checkedAt'];
+
+  function has(o, k) { return Object.prototype.hasOwnProperty.call(o, k); }
+  function str(v) { return v == null ? '' : String(v); }
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+
+  // ---------- digits / phone ----------
+  function thaiDigitsToArabic(s) {
+    return str(s).replace(/[๐-๙]/g, function (c) { return String(c.charCodeAt(0) - 0x0E50); });
+  }
+
+  function fail(error) { return { ok: false, error: error }; }
+
+  function normalizePhone(raw) {
+    var s = thaiDigitsToArabic(raw).trim();
+    var m = /^=\s*"(.*)"$/.exec(s);           // Excel ="..."
+    if (m) s = m[1].trim();
+    s = s.replace(/^'+/, '');                  // Excel text prefix '
+    s = s.replace(/[\s\-.()\/​‐-―]/g, '');
+    if (!s) return fail('ไม่มีหมายเลข');
+    var plus = false;
+    if (s.charAt(0) === '+') { plus = true; s = s.slice(1); }
+    if (!/^\d+$/.test(s)) return fail('มีอักขระที่ไม่ใช่ตัวเลข');
+    if (plus && s.slice(0, 2) !== '66') return fail('รองรับเฉพาะรหัสประเทศไทย +66');
+    if (s.slice(0, 2) === '66' && (plus || s.length === 11 || (s.length === 12 && s.charAt(2) === '0'))) {
+      var rest = s.slice(2);
+      if (rest.charAt(0) === '0') rest = rest.slice(1); // 66 + 0xx… — drop the trunk 0 (mobile or landline)
+      s = '0' + rest;
+    }
+    var len = s.length;
+    if (len === 10) {
+      if (/^0[689]/.test(s)) return { ok: true, phone: s };
+      if (s.charAt(0) !== '0') return fail('เบอร์ 10 หลักต้องขึ้นต้นด้วย 0');
+      return fail('เบอร์มือถือ 10 หลักต้องขึ้นต้นด้วย 06, 08 หรือ 09');
+    }
+    if (len === 9) {
+      if (/^0[2-7]/.test(s)) return { ok: true, phone: s };
+      if (/^[689]/.test(s)) return { ok: true, phone: '0' + s, warning: WARN_ADDED_ZERO };
+      if (/^0[89]/.test(s)) return fail('เบอร์มือถือต้องมี 10 หลัก (มี 9 หลัก)');
+      return fail('เบอร์บ้าน 9 หลักต้องขึ้นต้นด้วย 02–07');
+    }
+    return fail('จำนวนหลักไม่ถูกต้อง (' + len + ' หลัก) — เบอร์มือถือต้องมี 10 หลัก เบอร์บ้าน 9 หลัก');
+  }
+
+  function phoneItem(raw) {
+    var r = normalizePhone(raw);
+    return {
+      raw: raw,
+      ok: r.ok,
+      phone: r.ok ? r.phone : null,
+      error: r.ok ? null : r.error,
+      warning: r.warning || null
+    };
+  }
+
+  function parsePhoneList(text) {
+    return str(text).split(/[\r\n,;\t]+/)
+      .map(function (s) { return s.trim(); })
+      .filter(function (s) { return s !== ''; })
+      .map(phoneItem);
+  }
+
+  function toPhoneSet(existing) {
+    var set = {};
+    if (!existing) return set;
+    var list = (typeof existing.forEach === 'function') ? existing : [];
+    list.forEach(function (p) {
+      var v = (p && typeof p === 'object') ? p.phone : p;
+      if (v != null) set[String(v)] = true;
+    });
+    return set;
+  }
+
+  function classifyIncoming(items, existingPhones) {
+    var ex = toPhoneSet(existingPhones);
+    var seen = {};
+    return (items || []).map(function (it) {
+      var o = Object.assign({}, it);
+      if (!it || !it.ok || !it.phone) o.kind = 'invalid';
+      else if (ex[it.phone]) o.kind = 'dup-existing';
+      else if (seen[it.phone]) o.kind = 'dup-input';
+      else { o.kind = 'new'; seen[it.phone] = true; }
+      return o;
+    });
+  }
+
+  // ---------- CSV ----------
+  function parseCSV(text) {
+    var s = str(text);
+    if (s.charCodeAt(0) === 0xFEFF) s = s.slice(1);
+    var rows = [], row = [], field = '', inQ = false, started = false, i = 0, n = s.length;
+    while (i < n) {
+      var c = s.charAt(i);
+      if (inQ) {
+        if (c === '"') {
+          if (s.charAt(i + 1) === '"') { field += '"'; i += 2; continue; }
+          inQ = false; i++; continue;
+        }
+        field += c; i++; continue;
+      }
+      if (c === '"' && !started) { inQ = true; started = true; i++; continue; }
+      if (c === ',') { row.push(field); field = ''; started = false; i++; continue; }
+      if (c === '\r' || c === '\n') {
+        row.push(field); rows.push(row);
+        row = []; field = ''; started = false;
+        if (c === '\r' && s.charAt(i + 1) === '\n') i++;
+        i++; continue;
+      }
+      field += c; started = true; i++;
+    }
+    if (started || row.length > 0) { row.push(field); rows.push(row); }
+    return rows;
+  }
+
+  function csvCell(v) {
+    var s = str(v);
+    return /[",\r\n]|^\s|\s$/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }
+
+  function toCSV(rows) {
+    return (rows || []).map(function (r) { return (r || []).map(csvCell).join(','); }).join('\r\n') + '\r\n';
+  }
+
+  // Free text: prefix ' when it could be read as a formula (or already starts with ').
+  function safeText(v) {
+    var s = str(v);
+    return /^[=+\-@\t\r']/.test(s) ? "'" + s : s;
+  }
+  function unsafeText(s) {
+    return (s.length > 1 && s.charAt(0) === "'" && /[=+\-@\t\r']/.test(s.charAt(1))) ? s.slice(1) : s;
+  }
+
+  function recordsToCSV(records) {
+    var rows = [CSV_HEADERS.slice()];
+    (records || []).forEach(function (r) {
+      rows.push([
+        '="' + str(r.phone) + '"',
+        safeText(r.note),
+        STATUS_LABELS[r.status] || str(r.status),
+        safeText(r.message),
+        safeText(r.error),
+        r.waitDays == null ? '' : String(r.waitDays),
+        str(r.waitStart),
+        str(r.recheckDate),
+        SOURCE_LABELS[r.source] || str(r.source),
+        str(r.checkedAt),
+        AUTO_CHECK_TEXT
+      ]);
+    });
+    return '﻿' + toCSV(rows);
+  }
+
+  function headerKey(s) { return str(s).trim().toLowerCase().replace(/[\s_\-]/g, ''); }
+
+  function mapHeader(row) {
+    var map = {}, prio = {}, known = 0;
+    row.forEach(function (cell, idx) {
+      var k = headerKey(cell);
+      Object.keys(HEADER_ALIASES).forEach(function (field) {
+        var p = HEADER_ALIASES[field].map(headerKey).indexOf(k);
+        if (p < 0) return;
+        known++;
+        if (!has(map, field) || p < prio[field]) { map[field] = idx; prio[field] = p; }
+      });
+    });
+    return { map: map, known: known };
+  }
+
+  function lookupCode(v, codes, labels) {
+    var s = str(v).trim();
+    if (codes.indexOf(s) >= 0) return s;
+    var lower = s.toLowerCase();
+    for (var i = 0; i < codes.length; i++) {
+      if (codes[i] === lower || labels[codes[i]] === s) return codes[i];
+    }
+    return null;
+  }
+
+  function isValidISODate(s) {
+    if (typeof s !== 'string') return false;
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+    if (!m) return false;
+    var y = +m[1], mo = +m[2], d = +m[3];
+    var dt = new Date(y, mo - 1, d, 12);
+    return dt.getFullYear() === y && dt.getMonth() === mo - 1 && dt.getDate() === d;
+  }
+
+  function ymd(y, m, d) {
+    if (y > 2400) y -= 543; // Buddhist Era
+    var iso = String(y) + '-' + pad2(m) + '-' + pad2(d);
+    return isValidISODate(iso) ? iso : null;
+  }
+
+  // Accepts YYYY-MM-DD, YYYY/M/D, D/M/YYYY (day first, Thai convention), BE years, optional time suffix.
+  function parseDateLoose(v) {
+    var s = thaiDigitsToArabic(v).trim().replace(/[ T]\d{1,2}:\d{2}.*$/, '');
+    var m = /^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})$/.exec(s);
+    if (m) return ymd(+m[1], +m[2], +m[3]);
+    m = /^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})$/.exec(s);
+    if (m) return ymd(+m[3], +m[2], +m[1]);
+    return null;
+  }
+
+  function csvToRecords(text) {
+    var all = parseCSV(text);
+    var rows = [], issues = [];
+    if (!all.length) return { rows: rows, issues: issues };
+    var head = mapHeader(all[0]);
+    var hasHeader = head.known > 0 && !normalizePhone(all[0][0]).ok;
+    var map = hasHeader ? head.map : { phone: 0 };
+    if (hasHeader && !has(map, 'phone')) {
+      issues.push({ row: 1, raw: all[0].join(','), error: 'ไม่พบคอลัมน์เบอร์โทร', skipped: true });
+      return { rows: rows, issues: issues };
+    }
+    for (var i = hasHeader ? 1 : 0; i < all.length; i++) {
+      var cells = all[i];
+      var rowNo = i + 1;
+      if (cells.every(function (c) { return str(c).trim() === ''; })) continue;
+      var get = function (f) { return has(map, f) ? str(cells[map[f]]) : undefined; };
+      var rawPhone = get('phone');
+      var p = normalizePhone(rawPhone);
+      if (!p.ok) { issues.push({ row: rowNo, raw: rawPhone, error: p.error, skipped: true }); continue; }
+      var rec = { row: rowNo, phone: p.phone };
+      if (p.warning) rec.warning = p.warning;
+      var issue = function (field, value, error) {
+        issues.push({ row: rowNo, field: field, raw: value, error: error, skipped: false });
+      };
+      ['note', 'message', 'error'].forEach(function (f) {
+        var v = get(f);
+        if (v !== undefined) rec[f] = unsafeText(v);
+      });
+      var v = get('status');
+      if (v !== undefined) {
+        if (v.trim() === '') rec.status = 'unrecorded';
+        else {
+          var st = lookupCode(v, STATUSES, STATUS_LABELS);
+          if (!st) issue('status', v, 'ไม่รู้จักสถานะ "' + v + '" — ใช้ "ยังไม่บันทึกผล"');
+          rec.status = st || 'unrecorded';
+        }
+      }
+      v = get('waitDays');
+      if (v !== undefined) {
+        var wd = thaiDigitsToArabic(v).trim();
+        if (wd === '') rec.waitDays = null;
+        else if (/^\d+$/.test(wd)) rec.waitDays = parseInt(wd, 10);
+        else { issue('waitDays', v, 'จำนวนวันรอต้องเป็นจำนวนเต็มไม่ติดลบ'); rec.waitDays = null; }
+      }
+      ['waitStart', 'recheckDate'].forEach(function (f) {
+        var d = get(f);
+        if (d === undefined) return;
+        if (d.trim() === '') { rec[f] = null; return; }
+        var iso = parseDateLoose(d);
+        if (!iso) issue(f, d, 'วันที่ไม่ถูกต้อง (ใช้รูปแบบ YYYY-MM-DD)');
+        rec[f] = iso;
+      });
+      // Compute only when the file has no recheck-date column (or its value was unreadable).
+      // A present-but-empty cell means the user cleared it: keep null (export→import round-trip).
+      var rcRaw = get('recheckDate');
+      var rcMissing = rcRaw === undefined || (rcRaw.trim() !== '' && rec.recheckDate == null);
+      if (rcMissing && rec.waitStart && rec.waitDays != null) {
+        rec.recheckDate = computeRecheckDate(rec.waitStart, rec.waitDays);
+      }
+      v = get('source');
+      if (v !== undefined && v.trim() !== '') {
+        var src = lookupCode(v, SOURCES, SOURCE_LABELS);
+        if (!src) issue('source', v, 'ไม่รู้จักที่มา "' + v + '"');
+        else rec.source = src;
+      }
+      v = get('checkedAt');
+      if (v !== undefined) {
+        var ca = v.trim();
+        if (ca === '') rec.checkedAt = null;
+        else if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+\-]\d{2}:?\d{2})$/.test(ca) && !isNaN(Date.parse(ca))) rec.checkedAt = ca;
+        else if (!isNaN(Date.parse(ca))) rec.checkedAt = new Date(ca).toISOString();
+        else { issue('checkedAt', v, 'เวลาบันทึกผลไม่ถูกต้อง'); rec.checkedAt = null; }
+      }
+      rows.push(rec);
+    }
+    return { rows: rows, issues: issues };
+  }
+
+  // ---------- dates (local time, never UTC) ----------
+  function formatLocal(dt) {
+    return dt.getFullYear() + '-' + pad2(dt.getMonth() + 1) + '-' + pad2(dt.getDate());
+  }
+
+  function todayISO(date) {
+    var dt = date == null ? new Date() : new Date(typeof date.getTime === 'function' ? date.getTime() : date);
+    return formatLocal(dt);
+  }
+
+  function addDays(isoDate, n) {
+    if (!isValidISODate(isoDate)) return null;
+    if (typeof n !== 'number' || !isFinite(n) || Math.floor(n) !== n) return null;
+    var p = isoDate.split('-');
+    return formatLocal(new Date(+p[0], +p[1] - 1, +p[2] + n, 12));
+  }
+
+  function toWaitDays(v) {
+    if (v == null || v === '') return null;
+    var n = typeof v === 'number' ? v : (/^\s*\d+\s*$/.test(thaiDigitsToArabic(v)) ? parseInt(thaiDigitsToArabic(v), 10) : NaN);
+    return (isFinite(n) && n >= 0 && Math.floor(n) === n) ? n : null;
+  }
+
+  function computeRecheckDate(waitStart, waitDays) {
+    var n = toWaitDays(waitDays);
+    if (n == null || !isValidISODate(waitStart)) return null;
+    return addDays(waitStart, n);
+  }
+
+  function daysBetween(a, b) {
+    var x = a.split('-'), y = b.split('-');
+    return Math.round((Date.UTC(+y[0], +y[1] - 1, +y[2]) - Date.UTC(+x[0], +x[1] - 1, +x[2])) / 86400000);
+  }
+
+  function soonValue(soonDays) {
+    var n = (soonDays == null || soonDays === '') ? NaN : Number(soonDays);
+    return isFinite(n) ? Math.max(0, Math.floor(n)) : DEFAULT_SOON_DAYS;
+  }
+
+  // 'verified' records never need a recheck.
+  function dueState(record, today, soonDays) {
+    if (!record || record.status === 'verified' || !isValidISODate(record.recheckDate)) return 'none';
+    var t = isValidISODate(today) ? today : todayISO();
+    var diff = daysBetween(t, record.recheckDate);
+    if (diff < 0) return 'overdue';
+    if (diff === 0) return 'today';
+    if (diff <= soonValue(soonDays)) return 'soon';
+    return 'later';
+  }
+
+  // ---------- OCR text ----------
+  var THAI_RE = /([฀-๿])[ \t]+(?=[฀-๿])/g;
+  var WAIT_PATTERNS = [
+    /รอ[ \t]*(\d+)[ \t]*วัน/g,
+    /wait[ \t]*(\d+)[ \t]*day/gi,
+    /(\d+)[ \t]*day[ \t]*\([ \t]*s[ \t]*\)/gi,
+    /(\d+)[ \t]*วัน/g,
+    // Extra candidate source beyond SPEC's four, so "Try again in 5 days" is not missed and
+    // conflicting values end up ambiguous instead of one confident value.
+    /(\d+)[ \t]*days?\b/gi
+  ];
+
+  function extractPhones(text) {
+    var tokRe = /\+?\d(?:[\d\-.()]*\d)?/g, toks = [], m;
+    while ((m = tokRe.exec(text))) toks.push({ s: m[0], start: m.index, end: m.index + m[0].length });
+    var out = [], seen = {};
+    function push(raw) {
+      var it = phoneItem(raw);
+      var key = it.ok ? it.phone : 'raw:' + raw;
+      if (seen[key]) return;
+      seen[key] = true;
+      out.push({ raw: it.raw, phone: it.phone, ok: it.ok, warning: it.warning, error: it.error });
+    }
+    var i = 0;
+    while (i < toks.length) {
+      // chain of tokens separated only by short horizontal whitespace
+      var chainEnd = i;
+      while (chainEnd + 1 < toks.length && chainEnd - i < 3 &&
+        /^[ \t ]{1,3}$/.test(text.slice(toks[chainEnd].end, toks[chainEnd + 1].start))) chainEnd++;
+      var found = false;
+      for (var j = chainEnd; j >= i; j--) {
+        var raw = text.slice(toks[i].start, toks[j].end);
+        if (raw.replace(/\D/g, '').length > 13) continue;
+        if (normalizePhone(raw).ok) { push(raw); i = j + 1; found = true; break; }
+      }
+      if (found) continue;
+      var digits = toks[i].s.replace(/\D/g, '').length;
+      if (digits >= 9 && digits <= 12) push(toks[i].s);
+      i++;
+    }
+    return out;
+  }
+
+  function extractFromOcrText(text) {
+    var t = thaiDigitsToArabic(text);
+    var phones = extractPhones(t);
+    var collapsed = t.replace(THAI_RE, '$1');
+    var cands = [], byValue = {};
+    WAIT_PATTERNS.forEach(function (re) {
+      re.lastIndex = 0;
+      var m;
+      while ((m = re.exec(collapsed))) {
+        var value = parseInt(m[1], 10);
+        if (!byValue[value]) { byValue[value] = true; cands.push({ value: value, match: m[0].trim() }); }
+      }
+    });
+    var res = { phones: phones, waitDays: null, waitMatch: null, waitAmbiguous: false, waitCandidates: cands };
+    if (cands.length === 1) { res.waitDays = cands[0].value; res.waitMatch = cands[0].match; }
+    else if (cands.length > 1) res.waitAmbiguous = true;
+    return res;
+  }
+
+  // ---------- filter / merge ----------
+  var DUE_GROUPS = { due: ['overdue', 'today'], recheck: ['overdue', 'today', 'soon'] };
+
+  function filterRecords(records, opts) {
+    opts = opts || {};
+    var q = thaiDigitsToArabic(opts.q).trim().toLowerCase();
+    var qDigits = q.replace(/[\s\-.()\/+]/g, '');
+    var digitQuery = qDigits !== '' && /^\d+$/.test(qDigits);
+    var status = opts.status && opts.status !== 'all' ? opts.status : null;
+    var source = opts.source && opts.source !== 'all' ? opts.source : null;
+    var due = opts.due && opts.due !== 'all' ? (DUE_GROUPS[opts.due] || [opts.due]) : null;
+    var today = isValidISODate(opts.today) ? opts.today : todayISO();
+    return (records || []).filter(function (r) {
+      if (!r) return false;
+      if (status && r.status !== status) return false;
+      if (source && r.source !== source) return false;
+      if (due && due.indexOf(dueState(r, today, opts.soonDays)) < 0) return false;
+      if (q) {
+        var inPhone = digitQuery && str(r.phone).indexOf(qDigits) >= 0;
+        var hay = [r.phone, r.note, r.message, r.error].map(str).join('\n').toLowerCase();
+        if (!inPhone && hay.indexOf(q) < 0) return false;
+      }
+      return true;
+    });
+  }
+
+  var idCounter = 0;
+  function newId() {
+    idCounter = (idCounter + 1) % 1679616;
+    return 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8) + idCounter.toString(36);
+  }
+
+  function makeRecord(partial, opts) {
+    partial = partial || {};
+    opts = opts || {};
+    var now = opts.now || new Date().toISOString();
+    var waitDays = toWaitDays(partial.waitDays);
+    var waitStart = isValidISODate(partial.waitStart) ? partial.waitStart : null;
+    var recheck = partial.recheckDate === undefined
+      ? computeRecheckDate(waitStart, waitDays)
+      : (isValidISODate(partial.recheckDate) ? partial.recheckDate : null);
+    return {
+      id: opts.id || partial.id || newId(),
+      phone: str(partial.phone),
+      note: str(partial.note),
+      status: STATUSES.indexOf(partial.status) >= 0 ? partial.status : 'unrecorded',
+      message: str(partial.message),
+      error: str(partial.error),
+      waitDays: waitDays,
+      waitStart: waitStart,
+      recheckDate: recheck,
+      source: SOURCES.indexOf(partial.source) >= 0 ? partial.source : 'manual',
+      checkedAt: (partial.checkedAt && !isNaN(Date.parse(partial.checkedAt))) ? String(partial.checkedAt) : null,
+      createdAt: partial.createdAt || now,
+      updatedAt: partial.updatedAt || now
+    };
+  }
+
+  function mergeRecords(existing, incoming, mode, opts) {
+    opts = opts || {};
+    var now = opts.now || new Date().toISOString();
+    var idFn = opts.idFn || newId;
+    var defaultSource = opts.defaultSource || 'import';
+    var out = (existing || []).map(function (r) { return Object.assign({}, r); });
+    var index = {};
+    out.forEach(function (r, i) { index[r.phone] = i; });
+    var stats = { added: 0, updated: 0, skipped: 0, dupInput: 0, invalid: 0 };
+    var seen = {};
+    (incoming || []).forEach(function (inc) {
+      var p = inc ? normalizePhone(inc.phone) : { ok: false };
+      if (!p.ok) { stats.invalid++; return; }
+      if (seen[p.phone]) { stats.dupInput++; return; }
+      seen[p.phone] = true;
+      var data = {};
+      RECORD_FIELDS.forEach(function (f) { if (inc[f] !== undefined) data[f] = inc[f]; });
+      if (has(index, p.phone)) {
+        if (mode !== 'overwrite') { stats.skipped++; return; }
+        var cur = out[index[p.phone]];
+        var touched = RESULT_FIELDS.some(function (f) { return has(data, f); });
+        if (data.source === undefined && touched) data.source = defaultSource;
+        var merged = Object.assign({}, cur, data);
+        // Wait inputs changed but no recheck date supplied → recompute so it never goes stale.
+        if (!has(data, 'recheckDate') &&
+          (toWaitDays(merged.waitDays) !== toWaitDays(cur.waitDays) || str(merged.waitStart) !== str(cur.waitStart))) {
+          merged.recheckDate = computeRecheckDate(merged.waitStart, merged.waitDays);
+        }
+        var fixed = makeRecord(merged, { now: now, id: cur.id });
+        fixed.createdAt = cur.createdAt || now;
+        fixed.updatedAt = now;
+        out[index[p.phone]] = fixed;
+        stats.updated++;
+      } else {
+        if (data.source === undefined) data.source = defaultSource;
+        data.phone = p.phone;
+        var rec = makeRecord(data, { now: now, id: idFn() });
+        index[p.phone] = out.length;
+        out.push(rec);
+        stats.added++;
+      }
+    });
+    return Object.assign({ records: out }, stats);
+  }
+
+  // ---------- misc helpers ----------
+  function escapeHtml(s) {
+    return str(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function emptyState() {
+    return { version: 1, settings: { soonDays: DEFAULT_SOON_DAYS }, records: [] };
+  }
+
+  function sanitizeState(obj) {
+    var st = emptyState();
+    if (!obj || typeof obj !== 'object') return st;
+    if (obj.settings && obj.settings.soonDays != null) st.settings.soonDays = soonValue(obj.settings.soonDays);
+    var seen = {};
+    (Array.isArray(obj.records) ? obj.records : []).forEach(function (r) {
+      if (!r || typeof r !== 'object' || typeof r.phone !== 'string' || !/^\d+$/.test(r.phone)) return;
+      var p = normalizePhone(r.phone);
+      if (!p.ok || seen[p.phone]) return;
+      seen[p.phone] = true;
+      st.records.push(makeRecord(Object.assign({}, r, { phone: p.phone })));
+    });
+    return st;
+  }
+
+  var api = {
+    STORAGE_KEY: STORAGE_KEY,
+    STATUSES: STATUSES,
+    SOURCES: SOURCES,
+    STATUS_LABELS: STATUS_LABELS,
+    SOURCE_LABELS: SOURCE_LABELS,
+    AUTO_CHECK_TEXT: AUTO_CHECK_TEXT,
+    CSV_HEADERS: CSV_HEADERS,
+    RESULT_FIELDS: RESULT_FIELDS,
+    DEFAULT_SOON_DAYS: DEFAULT_SOON_DAYS,
+    thaiDigitsToArabic: thaiDigitsToArabic,
+    normalizePhone: normalizePhone,
+    parsePhoneList: parsePhoneList,
+    classifyIncoming: classifyIncoming,
+    parseCSV: parseCSV,
+    toCSV: toCSV,
+    recordsToCSV: recordsToCSV,
+    csvToRecords: csvToRecords,
+    parseDateLoose: parseDateLoose,
+    isValidISODate: isValidISODate,
+    addDays: addDays,
+    todayISO: todayISO,
+    daysBetween: daysBetween,
+    computeRecheckDate: computeRecheckDate,
+    dueState: dueState,
+    extractFromOcrText: extractFromOcrText,
+    filterRecords: filterRecords,
+    mergeRecords: mergeRecords,
+    makeRecord: makeRecord,
+    newId: newId,
+    escapeHtml: escapeHtml,
+    emptyState: emptyState,
+    sanitizeState: sanitizeState
+  };
+  if (typeof module !== 'undefined' && module && module.exports) module.exports = api;
+  if (typeof window !== 'undefined') window.LineCore = api;
+})();
+</script>
+<script id="app">
+(function () {
+  'use strict';
+  var C = window.LineCore;
+  if (!C) return;
+  const esc = C.escapeHtml;
+  const $ = (s, r) => (r || document).querySelector(s);
+  const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+  const TESSERACT_URL = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+  const OCR_LANG = 'tha+eng';
+  const LOW_CONF = 70;
+
+  // ================= toasts =================
+  function toast(msg, kind) {
+    const box = $('#toasts');
+    const el = document.createElement('div');
+    el.className = 'toast' + (kind === 'error' ? ' error' : '');
+    el.setAttribute('role', kind === 'error' ? 'alert' : 'status');
+    el.textContent = msg;
+    box.appendChild(el);
+    while (box.children.length > 3) box.firstChild.remove();
+    setTimeout(() => el.remove(), kind === 'error' ? 7000 : 4000);
+  }
+
+  // ================= storage (always try/catch) =================
+  let saveBlocked = false;
+  let startupNotice = null;
+  function storageBanner(detail) {
+    $('#storage-banner').hidden = false;
+    $('#storage-detail').textContent = detail ? '(' + detail + ')' : '';
+  }
+  function loadState() {
+    let raw;
+    try { raw = window.localStorage.getItem(C.STORAGE_KEY); }
+    catch (e) { storageBanner('เบราว์เซอร์นี้ไม่อนุญาตให้บันทึกข้อมูลในเครื่อง'); return C.emptyState(); }
+    if (raw == null) return C.emptyState();
+    try { return C.sanitizeState(JSON.parse(raw)); }
+    catch (e) {
+      try {
+        window.localStorage.setItem(C.STORAGE_KEY + '.unreadable.' + Date.now(), raw);
+        startupNotice = 'ข้อมูลที่บันทึกไว้เสียหาย อ่านไม่ได้ — เก็บสำเนาเดิมไว้ในเบราว์เซอร์แล้ว และเริ่มรายการใหม่';
+      } catch (e2) {
+        saveBlocked = true;
+        storageBanner('ข้อมูลเดิมอ่านไม่ได้และสำรองไม่ได้ จึงจะไม่บันทึกทับข้อมูลเดิม');
+      }
+      return C.emptyState();
+    }
+  }
+  function save() {
+    if (saveBlocked) return false;
+    try {
+      window.localStorage.setItem(C.STORAGE_KEY, JSON.stringify(state));
+      return true;
+    } catch (e) {
+      storageBanner(e && e.name === 'QuotaExceededError' ? 'พื้นที่เก็บข้อมูลของเบราว์เซอร์เต็ม' : 'บันทึกลงเบราว์เซอร์ไม่ได้');
+      return false;
+    }
+  }
+
+  let state = loadState();
+
+  // ================= helpers =================
+  const nowISO = () => new Date().toISOString();
+  const today = () => C.todayISO();
+  const soonDays = () => state.settings.soonDays;
+  const findRec = (id) => state.records.find((r) => r.id === id) || null;
+  function phoneIndex() { const m = {}; state.records.forEach((r) => { m[r.phone] = r; }); return m; }
+  function fmtPhone(p) {
+    p = String(p || '');
+    if (/^0[689]\d{8}$/.test(p)) return p.slice(0, 3) + '-' + p.slice(3, 6) + '-' + p.slice(6);
+    if (/^02\d{7}$/.test(p)) return '02-' + p.slice(2, 5) + '-' + p.slice(5);
+    if (/^0\d{8}$/.test(p)) return p.slice(0, 3) + '-' + p.slice(3, 6) + '-' + p.slice(6);
+    return p;
+  }
+  let dateFmt = null;
+  try { dateFmt = new Intl.DateTimeFormat('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }); } catch (e) { dateFmt = null; }
+  function fmtDate(iso) {
+    if (!C.isValidISODate(iso)) return '';
+    const p = iso.split('-').map(Number);
+    return dateFmt ? dateFmt.format(new Date(p[0], p[1] - 1, p[2], 12)) : iso;
+  }
+  function fmtDateTime(s) {
+    if (!s) return '';
+    const d = new Date(s);
+    if (isNaN(d.getTime())) return String(s);
+    try { return d.toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }); } catch (e) { return d.toLocaleString(); }
+  }
+  const stBadge = (s) => '<span class="badge st-' + esc(s) + '">' + esc(C.STATUS_LABELS[s] || s) + '</span>';
+  const srcBadge = (s) => '<span class="badge src src-' + esc(s) + '">' + esc(C.SOURCE_LABELS[s] || s) + '</span>';
+  function dueInfo(r) {
+    const st = C.dueState(r, today(), soonDays());
+    if (st === 'none') return { st: st, text: '' };
+    const d = C.daysBetween(today(), r.recheckDate);
+    const text = st === 'overdue' ? 'เลยกำหนด ' + (-d) + ' วัน' : st === 'today' ? 'ถึงกำหนดวันนี้' : 'อีก ' + d + ' วัน';
+    return { st: st, text: text };
+  }
+  function dueBadge(r) {
+    const i = dueInfo(r);
+    return i.st === 'none' ? '' : '<span class="badge due-' + i.st + '">' + esc(i.text) + '</span>';
+  }
+  // waitDays from a form field: '' -> null; non-negative integer; otherwise invalid
+  function readWaitDays(input) {
+    if (input.validity && input.validity.badInput) return { ok: false };
+    const v = C.thaiDigitsToArabic(String(input.value)).trim();
+    if (v === '') return { ok: true, value: null };
+    if (!/^\d+$/.test(v)) return { ok: false };
+    const n = parseInt(v, 10);
+    return n > 3650 ? { ok: false } : { ok: true, value: n };
+  }
+  function readDate(v) {
+    v = String(v || '').trim();
+    if (v === '') return { ok: true, value: null };
+    return C.isValidISODate(v) ? { ok: true, value: v } : { ok: false };
+  }
+  function byRecheck(a, b) {
+    if (a.recheckDate === b.recheckDate) return a.phone < b.phone ? -1 : 1;
+    if (!a.recheckDate) return 1;
+    if (!b.recheckDate) return -1;
+    return a.recheckDate < b.recheckDate ? -1 : 1;
+  }
+  function fillSelect(sel, options, value) {
+    sel.innerHTML = options.map((o) => '<option value="' + esc(o[0]) + '">' + esc(o[1]) + '</option>').join('');
+    if (value != null) sel.value = value;
+  }
+  function openDialog(d) { if (typeof d.showModal === 'function') { if (!d.open) d.showModal(); } else d.setAttribute('open', ''); }
+  function closeDialog(d) { if (typeof d.close === 'function') d.close(); else d.removeAttribute('open'); }
+
+  function confirmDialog(opts) {
+    return new Promise((resolve) => {
+      const d = $('#dlg-confirm');
+      $('#confirm-title').textContent = opts.title;
+      $('#confirm-msg').textContent = opts.message || '';
+      const ok = $('#confirm-ok');
+      ok.textContent = opts.okText || 'ยืนยัน';
+      ok.className = opts.danger ? 'danger' : 'primary';
+      d.querySelector('button[value="cancel"]').textContent = opts.cancelText || 'ยกเลิก';
+      d.returnValue = '';
+      const onClose = () => { d.removeEventListener('close', onClose); resolve(d.returnValue === 'ok'); };
+      d.addEventListener('close', onClose);
+      openDialog(d);
+      setTimeout(() => d.querySelector('button[value="cancel"]').focus(), 0);
+    });
+  }
+
+  // ================= tabs =================
+  const TABS = ['list', 'add', 'ocr', 'export', 'limits'];
+  function currentTab() { const h = location.hash.slice(1); return TABS.indexOf(h) >= 0 ? h : 'list'; }
+  function showTab() {
+    const t = currentTab();
+    TABS.forEach((name) => { $('#tab-' + name).hidden = name !== t; });
+    $$('.tabs a').forEach((a) => {
+      if (a.dataset.tab === t) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+    });
+    if (t === 'export') renderExport();
+  }
+  window.addEventListener('hashchange', () => { showTab(); window.scrollTo(0, 0); });
+
+  // ================= list tab =================
+  const listUI = { q: '', status: 'all', source: 'all', due: 'all', sort: 'updated' };
+  let selected = {};
+  const DUE_OPTIONS = [
+    ['all', 'ทั้งหมด'], ['recheck', 'ต้องตรวจซ้ำ (เลยกำหนด + วันนี้ + ใกล้ถึง)'], ['due', 'ถึงกำหนด (เลยกำหนด + วันนี้)'],
+    ['overdue', 'เลยกำหนด'], ['today', 'ถึงกำหนดวันนี้'], ['soon', 'ใกล้ถึงกำหนด'], ['later', 'ยังไม่ถึงกำหนด'], ['none', 'ไม่มีวันนัด']
+  ];
+  const SORT_OPTIONS = [
+    ['updated', 'แก้ไขล่าสุด'], ['recheck', 'วันนัดตรวจซ้ำ (ใกล้สุดก่อน)'], ['phone', 'เบอร์ (น้อยไปมาก)'],
+    ['created', 'เพิ่มล่าสุด'], ['status', 'สถานะ']
+  ];
+  const statusOpts = () => C.STATUSES.map((s) => [s, C.STATUS_LABELS[s]]);
+  const sourceOpts = () => C.SOURCES.map((s) => [s, C.SOURCE_LABELS[s]]);
+
+  function sortRecords(rs, key) {
+    const a = rs.slice();
+    const str = (x) => (x == null ? '' : String(x));
+    const cmp = {
+      updated: (x, y) => (str(y.updatedAt) > str(x.updatedAt) ? 1 : str(y.updatedAt) < str(x.updatedAt) ? -1 : 0),
+      created: (x, y) => (str(y.createdAt) > str(x.createdAt) ? 1 : str(y.createdAt) < str(x.createdAt) ? -1 : 0),
+      recheck: byRecheck,
+      phone: (x, y) => (x.phone < y.phone ? -1 : x.phone > y.phone ? 1 : 0),
+      status: (x, y) => (C.STATUSES.indexOf(x.status) - C.STATUSES.indexOf(y.status)) || (x.phone < y.phone ? -1 : 1)
+    }[key] || (() => 0);
+    return a.sort(cmp);
+  }
+  function visibleRecords() {
+    const rs = C.filterRecords(state.records, {
+      q: listUI.q, status: listUI.status, source: listUI.source, due: listUI.due, today: today(), soonDays: soonDays()
+    });
+    return sortRecords(rs, listUI.sort);
+  }
+  function filtersActive() { return listUI.q.trim() !== '' || listUI.status !== 'all' || listUI.source !== 'all' || listUI.due !== 'all'; }
+  function filterDescription() {
+    const parts = [];
+    if (listUI.q.trim()) parts.push('ค้นหา “' + listUI.q.trim() + '”');
+    if (listUI.status !== 'all') parts.push('สถานะ: ' + C.STATUS_LABELS[listUI.status]);
+    if (listUI.source !== 'all') parts.push('ที่มา: ' + C.SOURCE_LABELS[listUI.source]);
+    if (listUI.due !== 'all') parts.push('กำหนด: ' + (DUE_OPTIONS.find((o) => o[0] === listUI.due) || ['', listUI.due])[1]);
+    return parts.length ? parts.join(' · ') : 'ไม่มีตัวกรอง (เท่ากับทั้งหมด)';
+  }
+
+  function renderStats() {
+    const t = today(), sd = soonDays();
+    let waiting = 0, due = 0, soon = 0;
+    state.records.forEach((r) => {
+      if (r.status === 'waiting') waiting++;
+      const d = C.dueState(r, t, sd);
+      if (d === 'overdue' || d === 'today') due++; else if (d === 'soon') soon++;
+    });
+    const stat = (key, cls, n, label) => '<button type="button" class="stat ' + cls + '" data-action="stat" data-stat="' + key + '"><span class="n">' + n + '</span><span class="l">' + label + '</span></button>';
+    $('#stats').innerHTML =
+      stat('all', '', state.records.length, 'ทั้งหมด') +
+      stat('waiting', 'is-wait', waiting, 'ต้องรอ') +
+      stat('due', 'is-due', due, 'ถึงกำหนดตรวจซ้ำ') +
+      stat('soon', 'is-soon', soon, 'ใกล้ถึงกำหนด (' + sd + ' วัน)');
+    const tc = $('#tab-due-count');
+    tc.hidden = due === 0;
+    tc.textContent = String(due);
+    tc.title = 'ถึงกำหนดตรวจซ้ำ ' + due + ' เบอร์';
+  }
+
+  function dueItem(r) {
+    return '<li><div class="who"><span class="phone">' + esc(fmtPhone(r.phone)) + '</span>' +
+      (r.note ? ' <span class="muted">' + esc(r.note) + '</span>' : '') +
+      '<div class="small muted">นัด ' + esc(fmtDate(r.recheckDate)) + ' ' + dueBadge(r) + ' ' + srcBadge(r.source) + '</div></div>' +
+      '<button type="button" class="sm primary" data-action="record-result" data-id="' + esc(r.id) + '">บันทึกผลตรวจ</button></li>';
+  }
+  function renderDueBox() {
+    const opts = { today: today(), soonDays: soonDays() };
+    const due = C.filterRecords(state.records, Object.assign({ due: 'due' }, opts)).sort(byRecheck);
+    const soon = C.filterRecords(state.records, Object.assign({ due: 'soon' }, opts)).sort(byRecheck);
+    const box = $('#due-box');
+    if (!due.length && !soon.length) {
+      box.innerHTML = state.records.length
+        ? '<div class="card due-empty muted">ไม่มีเบอร์ที่ถึงกำหนดหรือใกล้ถึงกำหนดตรวจซ้ำ (ภายใน ' + soonDays() + ' วัน)</div>'
+        : '';
+      return;
+    }
+    const MAX = 8;
+    const col = (title, list, key, empty) => '<div class="card due-col"><h3>' + title + ' <span class="badge ' + (key === 'due' ? 'due-overdue' : 'due-soon') + '">' + list.length + '</span></h3>' +
+      (list.length ? '<ul class="due-list">' + list.slice(0, MAX).map(dueItem).join('') + '</ul>' : '<p class="muted small">' + empty + '</p>') +
+      (list.length > MAX ? '<button type="button" class="link" data-action="due-show" data-due="' + key + '">ดูทั้งหมด ' + list.length + ' เบอร์</button>' : '') +
+      '</div>';
+    box.innerHTML = col('ถึงกำหนดตรวจซ้ำ', due, 'due', 'ไม่มี') + col('ใกล้ถึงกำหนด', soon, 'soon', 'ไม่มีภายใน ' + soonDays() + ' วัน');
+  }
+
+  function recordRow(r) {
+    const id = esc(r.id);
+    const sel = !!selected[r.id];
+    const msg = r.message ? '<div class="clamp">' + esc(r.message) + '</div>' : '';
+    const err = r.error ? '<div class="clamp err">' + esc(r.error) + '</div>' : '';
+    return '<tr data-id="' + id + '"' + (sel ? ' class="is-selected"' : '') + '>' +
+      '<td class="c-sel"><input type="checkbox" class="row-check" data-id="' + id + '"' + (sel ? ' checked' : '') + ' aria-label="เลือก ' + esc(r.phone) + '"></td>' +
+      '<td class="c-head" data-label="เบอร์"><span class="phone">' + esc(fmtPhone(r.phone)) + '</span></td>' +
+      '<td class="c-note" data-label="ชื่อ/หมายเหตุ">' + (r.note ? esc(r.note) : '<span class="muted">—</span>') + '</td>' +
+      '<td data-label="สถานะ">' + stBadge(r.status) + '</td>' +
+      '<td class="c-msg" data-label="ข้อความ/ข้อผิดพลาด">' + (msg || err ? msg + err : '<span class="muted">—</span>') + '</td>' +
+      '<td class="c-nw" data-label="วันรอ">' + (r.waitDays == null ? '<span class="muted">—</span>' : esc(r.waitDays) + ' วัน') +
+        (r.waitStart ? '<div class="small muted">เห็นข้อความ ' + esc(fmtDate(r.waitStart)) + '</div>' : '') + '</td>' +
+      '<td class="c-nw" data-label="นัดตรวจซ้ำ">' + (r.recheckDate ? '<div>' + esc(fmtDate(r.recheckDate)) + '</div>' + dueBadge(r) : '<span class="muted">—</span>') + '</td>' +
+      '<td data-label="ที่มา">' + srcBadge(r.source) + (r.checkedAt ? '<div class="small muted">บันทึก ' + esc(fmtDateTime(r.checkedAt)) + '</div>' : '') + '</td>' +
+      '<td class="c-auto" data-label="ตรวจอัตโนมัติ"><a href="#limits">' + esc(C.AUTO_CHECK_TEXT) + '</a></td>' +
+      '<td class="c-act"><div class="row-actions">' +
+        '<button type="button" class="sm primary" data-action="record-result" data-id="' + id + '">บันทึกผลตรวจ</button>' +
+        '<button type="button" class="sm" data-action="record-edit" data-id="' + id + '">แก้ไข</button>' +
+        '<button type="button" class="sm danger-ghost" data-action="record-delete" data-id="' + id + '">ลบ</button>' +
+      '</div></td></tr>';
+  }
+
+  let visibleIds = [];
+  function renderTable() {
+    const rows = visibleRecords();
+    visibleIds = rows.map((r) => r.id);
+    const vis = {};
+    visibleIds.forEach((id) => { vis[id] = true; });
+    Object.keys(selected).forEach((id) => { if (!vis[id]) delete selected[id]; });
+    const wrap = $('#table-wrap');
+    $('#f-count').textContent = filtersActive()
+      ? 'แสดง ' + rows.length + ' จาก ' + state.records.length + ' เบอร์'
+      : 'ทั้งหมด ' + state.records.length + ' เบอร์';
+    $('#bulkbar').hidden = rows.length === 0;
+    if (!state.records.length) {
+      wrap.innerHTML = '<div class="empty"><p>ยังไม่มีเบอร์ในรายการ</p><div class="actions"><a href="#add">เพิ่มเบอร์ / นำเข้า CSV</a><a href="#ocr">อ่านจากภาพ</a></div></div>';
+    } else if (!rows.length) {
+      wrap.innerHTML = '<div class="empty"><p>ไม่พบเบอร์ตามตัวกรอง</p><div class="actions"><button type="button" data-action="filters-reset">ล้างตัวกรอง</button></div></div>';
+    } else {
+      wrap.innerHTML = '<table class="grid records"><thead><tr><th class="c-sel"><span class="visually-hidden">เลือก</span></th><th>เบอร์</th><th>ชื่อ/หมายเหตุ</th><th>สถานะ</th><th>ข้อความ/ข้อผิดพลาด</th><th>วันรอ</th><th>นัดตรวจซ้ำ</th><th>ที่มา</th><th>ตรวจอัตโนมัติ</th><th class="c-act"><span class="visually-hidden">การทำงาน</span></th></tr></thead><tbody>' +
+        rows.map(recordRow).join('') + '</tbody></table>';
+    }
+    updateBulkBar();
+  }
+  function updateBulkBar() {
+    const n = Object.keys(selected).length;
+    $('#sel-count').textContent = n ? 'เลือกแล้ว ' + n + ' เบอร์' : 'ยังไม่ได้เลือก';
+    $('#bulk-status-btn').disabled = n === 0;
+    $('#bulk-delete-btn').disabled = n === 0;
+    const all = $('#sel-all');
+    all.checked = n > 0 && n === visibleIds.length;
+    all.indeterminate = n > 0 && n < visibleIds.length;
+  }
+
+  function renderAll() {
+    renderStats();
+    renderDueBox();
+    renderTable();
+    renderExport();
+    const wipe = $('#wipe-btn');
+    wipe.disabled = state.records.length === 0;
+    wipe.textContent = state.records.length ? 'ล้างข้อมูลทั้งหมด (' + state.records.length + ' เบอร์)' : 'ไม่มีข้อมูลให้ล้าง';
+    if (pastePreview) renderPastePreview();
+    if (csvPreview) renderCsvPreview();
+  }
+  function commit(msg) { save(); renderAll(); if (msg) toast(msg); }
+
+  function syncFilterControls() {
+    $('#f-q').value = listUI.q;
+    $('#f-status').value = listUI.status;
+    $('#f-source').value = listUI.source;
+    $('#f-due').value = listUI.due;
+    $('#f-sort').value = listUI.sort;
+    $('#f-soon').value = String(soonDays());
+  }
+  function setFilters(patch) {
+    Object.assign(listUI, patch);
+    syncFilterControls();
+    renderTable();
+    if (currentTab() !== 'list') location.hash = '#list';
+    $('#table-wrap').scrollIntoView({ block: 'start', behavior: 'smooth' });
+  }
+
+  // ---- result dialog ----
+  let resultCtx = null;
+  function resultComputed() {
+    const f = $('#form-result');
+    const wd = readWaitDays(f.waitDays);
+    const ws = readDate(f.waitStart.value);
+    if (!wd.ok || !ws.ok) return null;
+    return C.computeRecheckDate(ws.value, wd.value);
+  }
+  function updateResultCalc() {
+    const f = $('#form-result');
+    const computed = resultComputed();
+    if (!resultCtx.manual) f.recheckDate.value = computed || '';
+    const wd = readWaitDays(f.waitDays);
+    const calc = $('#result-calc');
+    const useBtn = $('#result-use-calc');
+    useBtn.hidden = true;
+    if (!wd.ok) calc.textContent = 'จำนวนวันรอต้องเป็นจำนวนเต็มตั้งแต่ 0';
+    else if (computed && resultCtx.manual && f.recheckDate.value !== computed) {
+      calc.textContent = 'คุณแก้วันนัดเอง — ค่าที่คำนวณได้คือ ' + fmtDate(computed);
+      useBtn.hidden = false;
+      useBtn.textContent = 'ใช้ค่าที่คำนวณ (' + fmtDate(computed) + ')';
+    } else if (computed) calc.textContent = 'คำนวณ: วันที่เห็นข้อความ + ' + wd.value + ' วัน = ' + fmtDate(computed);
+    else if (wd.value != null && !f.waitStart.value) calc.textContent = 'กรอก “วันที่เห็นข้อความ” เพื่อคำนวณวันนัดตรวจซ้ำ';
+    else if (wd.value == null) calc.textContent = 'ไม่มีจำนวนวันรอ — เว้นวันนัดว่างไว้ หรือกำหนดเองได้';
+    else calc.textContent = '';
+  }
+  function openResult(id) {
+    const r = findRec(id);
+    if (!r) { toast('ไม่พบเบอร์นี้แล้ว', 'error'); return; }
+    const f = $('#form-result');
+    f.status.value = r.status;
+    f.message.value = r.message;
+    f.waitDays.value = r.waitDays == null ? '' : String(r.waitDays);
+    f.waitStart.value = r.waitStart || '';
+    f.recheckDate.value = r.recheckDate || '';
+    f.error.value = r.error;
+    const computed = C.computeRecheckDate(r.waitStart, r.waitDays);
+    resultCtx = { id: id, manual: !!r.recheckDate && r.recheckDate !== computed };
+    $('#result-phone').textContent = fmtPhone(r.phone);
+    $('#result-err').textContent = '';
+    updateResultCalc();
+    openDialog($('#dlg-result'));
+  }
+  function bindResultDialog() {
+    const f = $('#form-result');
+    fillSelect(f.status, statusOpts());
+    f.addEventListener('input', (e) => {
+      if (!resultCtx) return;
+      if (e.target.name === 'recheckDate') {
+        const computed = resultComputed();
+        resultCtx.manual = f.recheckDate.value !== (computed || '');
+      }
+      if (['waitDays', 'waitStart', 'recheckDate'].indexOf(e.target.name) >= 0) updateResultCalc();
+    });
+    f.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-result-act]');
+      if (!b || !resultCtx) return;
+      const act = b.dataset.resultAct;
+      if (act === 'today') f.waitStart.value = today();
+      if (act === 'clear-start') f.waitStart.value = '';
+      if (act === 'use-calc') resultCtx.manual = false;
+      updateResultCalc();
+    });
+    f.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!resultCtx) return;
+      const r = findRec(resultCtx.id);
+      const err = $('#result-err');
+      if (!r) { err.textContent = 'ไม่พบเบอร์นี้แล้ว (อาจถูกลบจากแท็บอื่น)'; return; }
+      const wd = readWaitDays(f.waitDays);
+      if (!wd.ok) { err.textContent = 'จำนวนวันรอต้องเป็นจำนวนเต็มตั้งแต่ 0 ถึง 3650 หรือเว้นว่าง'; f.waitDays.focus(); return; }
+      const ws = readDate(f.waitStart.value);
+      if (!ws.ok) { err.textContent = 'วันที่เห็นข้อความไม่ถูกต้อง'; f.waitStart.focus(); return; }
+      const rc = readDate(f.recheckDate.value);
+      if (!rc.ok) { err.textContent = 'วันนัดตรวจซ้ำไม่ถูกต้อง'; f.recheckDate.focus(); return; }
+      if (C.STATUSES.indexOf(f.status.value) < 0) { err.textContent = 'โปรดเลือกสถานะ'; return; }
+      const now = nowISO();
+      Object.assign(r, {
+        status: f.status.value, message: f.message.value.trim(), error: f.error.value.trim(),
+        waitDays: wd.value, waitStart: ws.value, recheckDate: rc.value,
+        source: 'manual', checkedAt: now, updatedAt: now
+      });
+      closeDialog($('#dlg-result'));
+      resultCtx = null;
+      commit('บันทึกผลของ ' + fmtPhone(r.phone) + ' แล้ว');
+    });
+  }
+
+  // ---- edit dialog ----
+  let editId = null;
+  function openEdit(id) {
+    const r = findRec(id);
+    if (!r) { toast('ไม่พบเบอร์นี้แล้ว', 'error'); return; }
+    editId = id;
+    const f = $('#form-edit');
+    f.phone.value = r.phone;
+    f.note.value = r.note;
+    $('#edit-err').textContent = '';
+    $('#edit-phone-hint').textContent = '';
+    openDialog($('#dlg-edit'));
+  }
+  function bindEditDialog() {
+    const f = $('#form-edit');
+    f.phone.addEventListener('input', () => {
+      const p = C.normalizePhone(f.phone.value);
+      $('#edit-phone-hint').textContent = p.ok ? 'จะบันทึกเป็น ' + fmtPhone(p.phone) + (p.warning ? ' (' + p.warning + ')' : '') : p.error;
+    });
+    f.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const r = findRec(editId);
+      const err = $('#edit-err');
+      if (!r) { err.textContent = 'ไม่พบเบอร์นี้แล้ว'; return; }
+      const p = C.normalizePhone(f.phone.value);
+      if (!p.ok) { err.textContent = p.error; f.phone.focus(); return; }
+      const other = state.records.find((x) => x.phone === p.phone && x.id !== r.id);
+      if (other) { err.textContent = 'เบอร์ ' + fmtPhone(p.phone) + ' มีอยู่แล้วในรายการ'; f.phone.focus(); return; }
+      const note = f.note.value.trim();
+      const changed = p.phone !== r.phone;
+      const hasResult = r.status !== 'unrecorded' || r.message || r.error || r.waitDays != null ||
+        r.waitStart || r.recheckDate || r.checkedAt;
+      const finish = (reset) => {
+        const cur = findRec(r.id);
+        if (!cur) { toast('ไม่พบเบอร์นี้แล้ว', 'error'); return; }
+        if (state.records.some((x) => x.phone === p.phone && x.id !== cur.id)) { toast('เบอร์ ' + fmtPhone(p.phone) + ' มีอยู่แล้วในรายการ', 'error'); return; }
+        const oldPhone = cur.phone;
+        cur.phone = p.phone;
+        cur.note = note;
+        if (reset) {
+          Object.assign(cur, { status: 'unrecorded', message: '', error: '', waitDays: null, waitStart: null,
+            recheckDate: null, source: 'manual', checkedAt: null });
+        }
+        cur.updatedAt = nowISO();
+        commit('แก้ไข ' + fmtPhone(cur.phone) + ' แล้ว' + (reset ? ' (ล้างผลตรวจของ ' + fmtPhone(oldPhone) + ')' : ''));
+      };
+      closeDialog($('#dlg-edit'));
+      editId = null;
+      if (!(changed && hasResult)) { finish(false); return; }
+      confirmDialog({
+        title: 'เปลี่ยนเบอร์ ' + fmtPhone(r.phone) + ' เป็น ' + fmtPhone(p.phone),
+        message: 'ผลตรวจที่บันทึกไว้ (สถานะ ' + (C.STATUS_LABELS[r.status] || r.status) + ') เป็นของเบอร์เดิม ' +
+          'ถ้าเบอร์ใหม่ยังไม่เคยตรวจ ให้ล้างผลตรวจ — ถ้าแค่แก้เลขที่พิมพ์ผิด ให้กด "เก็บผลเดิม"',
+        okText: 'ล้างผลตรวจ', cancelText: 'เก็บผลเดิม', danger: true
+      }).then((reset) => finish(reset));
+    });
+  }
+
+  async function deleteRecord(id) {
+    const r = findRec(id);
+    if (!r) return;
+    const ok = await confirmDialog({ title: 'ลบเบอร์ ' + fmtPhone(r.phone) + '?', message: 'ข้อมูลและผลที่บันทึกของเบอร์นี้จะถูกลบ ย้อนกลับไม่ได้', okText: 'ลบ', danger: true });
+    if (!ok) return;
+    state.records = state.records.filter((x) => x.id !== id);
+    delete selected[id];
+    commit('ลบ ' + fmtPhone(r.phone) + ' แล้ว');
+  }
+  async function bulkDelete() {
+    const ids = Object.keys(selected);
+    if (!ids.length) return;
+    const ok = await confirmDialog({ title: 'ลบ ' + ids.length + ' เบอร์ที่เลือก?', message: 'ย้อนกลับไม่ได้ — แนะนำให้ส่งออก CSV ไว้ก่อน', okText: 'ลบ ' + ids.length + ' เบอร์', danger: true });
+    if (!ok) return;
+    const del = {};
+    ids.forEach((id) => { del[id] = true; });
+    state.records = state.records.filter((r) => !del[r.id]);
+    selected = {};
+    commit('ลบ ' + ids.length + ' เบอร์แล้ว');
+  }
+  async function bulkStatus() {
+    const ids = Object.keys(selected);
+    const st = $('#bulk-status').value;
+    if (!ids.length || C.STATUSES.indexOf(st) < 0) return;
+    const ok = await confirmDialog({ title: 'เปลี่ยนสถานะ ' + ids.length + ' เบอร์เป็น “' + C.STATUS_LABELS[st] + '”?', message: 'ผลจะถูกบันทึกว่าที่มาเป็น “ผู้ใช้กรอก” — ข้อมูลวันรอและวันนัดเดิมยังอยู่', okText: 'เปลี่ยนสถานะ' });
+    if (!ok) return;
+    const now = nowISO();
+    state.records.forEach((r) => {
+      if (selected[r.id]) Object.assign(r, { status: st, source: 'manual', checkedAt: now, updatedAt: now });
+    });
+    commit('เปลี่ยนสถานะ ' + ids.length + ' เบอร์แล้ว');
+  }
+
+  // ================= add tab =================
+  let pastePreview = null;
+  const KIND_BADGE = {
+    'new': '<span class="badge kind-new">ใหม่</span>',
+    'dup-existing': '<span class="badge kind-dup">มีอยู่แล้ว — ข้าม</span>',
+    'dup-input': '<span class="badge kind-dup">ซ้ำในรายการที่วาง — ข้าม</span>',
+    'invalid': '<span class="badge kind-invalid">ไม่ถูกต้อง</span>'
+  };
+  function classifyPaste() {
+    return C.classifyIncoming(C.parsePhoneList($('#paste-text').value), state.records.map((r) => r.phone));
+  }
+  function renderPastePreview() {
+    const box = $('#paste-preview');
+    if (!pastePreview) { box.innerHTML = ''; return; }
+    const items = pastePreview.items = classifyPaste();
+    if (!items.length) { box.innerHTML = '<p class="muted">ไม่พบเบอร์ในช่องด้านบน</p>'; return; }
+    const count = (k) => items.filter((i) => i.kind === k).length;
+    const fixed = items.filter((i) => i.kind === 'new' && i.warning).length;
+    const nNew = count('new');
+    box.innerHTML =
+      '<div class="summary-line">' +
+        '<span class="badge kind-new">ใหม่ ' + nNew + '</span>' +
+        '<span class="badge kind-dup">มีอยู่แล้ว ' + count('dup-existing') + '</span>' +
+        '<span class="badge kind-dup">ซ้ำในที่วาง ' + count('dup-input') + '</span>' +
+        '<span class="badge kind-invalid">ไม่ถูกต้อง ' + count('invalid') + '</span>' +
+        (fixed ? '<span class="badge warn">เติม 0 ' + fixed + '</span>' : '') +
+      '</div>' +
+      '<div class="preview-wrap"><table class="grid"><thead><tr><th>ที่วาง</th><th>เบอร์ที่จะบันทึก</th><th>ผล</th></tr></thead><tbody>' +
+      items.map((i) => '<tr>' +
+        '<td class="c-head" data-label="ที่วาง">' + esc(i.raw) + '</td>' +
+        '<td data-label="จะบันทึก">' + (i.phone ? '<span class="phone">' + esc(fmtPhone(i.phone)) + '</span>' : '<span class="muted">—</span>') + '</td>' +
+        '<td data-label="ผล">' + KIND_BADGE[i.kind] +
+          (i.warning ? ' <span class="badge warn">' + esc(i.warning) + '</span>' : '') +
+          (i.kind === 'invalid' && i.error ? '<div class="small err">' + esc(i.error) + '</div>' : '') + '</td></tr>').join('') +
+      '</tbody></table></div>' +
+      '<div class="actions"><button type="button" class="primary" data-action="paste-commit"' + (nNew ? '' : ' disabled') + '>ยืนยันเพิ่ม ' + nNew + ' เบอร์ใหม่</button>' +
+      '<button type="button" data-action="paste-cancel">ยกเลิกพรีวิว</button></div>';
+  }
+  function pasteCommit() {
+    const items = classifyPaste().filter((i) => i.kind === 'new');
+    if (!items.length) { toast('ไม่มีเบอร์ใหม่ให้เพิ่ม', 'error'); return; }
+    const note = $('#paste-note').value.trim();
+    const now = nowISO();
+    items.forEach((i) => { state.records.push(C.makeRecord({ phone: i.phone, note: note, source: 'manual' }, { now: now })); });
+    $('#paste-text').value = '';
+    $('#paste-note').value = '';
+    pastePreview = null;
+    commit('เพิ่ม ' + items.length + ' เบอร์แล้ว');
+    renderPastePreview();
+  }
+
+  let csvPreview = null;
+  function csvMode() { const r = $('input[name="csv-mode"]:checked'); return r ? r.value : 'skip'; }
+  function readFileText(file) {
+    return file.arrayBuffer().then((buf) => {
+      try { return new TextDecoder('utf-8', { fatal: true }).decode(buf); }
+      catch (e) {
+        try { return new TextDecoder('windows-874').decode(buf); } // Thai Excel (TIS-620)
+        catch (e2) { return new TextDecoder('utf-8').decode(buf); }
+      }
+    });
+  }
+  function onCsvFile(file) {
+    if (!file) return;
+    if (file.size > 20 * 1024 * 1024) { toast('ไฟล์ใหญ่เกิน 20 MB', 'error'); return; }
+    readFileText(file).then((text) => {
+      const res = C.csvToRecords(text);
+      csvPreview = { name: file.name, rows: res.rows, issues: res.issues };
+      renderCsvPreview();
+    }).catch(() => toast('อ่านไฟล์ไม่ได้', 'error'));
+  }
+  // Source that will be saved for a preview row (mirrors mergeRecords: defaultSource 'import').
+  function previewSource(x, mode, idx) {
+    const r = x.r;
+    if (x.kind === 'new') return srcBadge(r.source || 'import');
+    if (x.kind === 'exist' && mode === 'overwrite') {
+      if (r.source) return srcBadge(r.source);
+      if (C.RESULT_FIELDS.some((f) => r[f] !== undefined)) return srcBadge('import');
+      const cur = idx[r.phone];
+      return (cur ? srcBadge(cur.source) + ' ' : '') + '<span class="small muted">(คงเดิม)</span>';
+    }
+    return '<span class="muted">—</span>';
+  }
+  function renderCsvPreview() {
+    const box = $('#csv-preview');
+    if (!csvPreview) { box.innerHTML = ''; return; }
+    const mode = csvMode();
+    const idx = phoneIndex();
+    const seen = {};
+    let nNew = 0, nExist = 0, nDup = 0;
+    const rows = csvPreview.rows.map((r) => {
+      let kind;
+      if (seen[r.phone]) { kind = 'dup'; nDup++; }
+      else if (idx[r.phone]) { kind = 'exist'; nExist++; }
+      else { kind = 'new'; nNew++; }
+      seen[r.phone] = true;
+      return { r: r, kind: kind };
+    });
+    const skippedRows = csvPreview.issues.filter((i) => i.skipped).length;
+    const kindHtml = (k) => k === 'new' ? KIND_BADGE['new']
+      : k === 'dup' ? '<span class="badge kind-dup">ซ้ำในไฟล์ — ข้าม</span>'
+      : mode === 'overwrite' ? '<span class="badge kind-over">มีอยู่แล้ว — เขียนทับ</span>' : '<span class="badge kind-dup">มีอยู่แล้ว — ข้าม</span>';
+    const MAX = 300;
+    const actionable = nNew + (mode === 'overwrite' ? nExist : 0);
+    box.innerHTML =
+      '<h3>พรีวิว: ' + esc(csvPreview.name) + '</h3>' +
+      '<div class="summary-line">' +
+        '<span class="badge kind-new">ใหม่ ' + nNew + '</span>' +
+        '<span class="badge ' + (mode === 'overwrite' ? 'kind-over' : 'kind-dup') + '">มีอยู่แล้ว ' + nExist + (mode === 'overwrite' ? ' (เขียนทับ)' : ' (ข้าม)') + '</span>' +
+        '<span class="badge kind-dup">ซ้ำในไฟล์ ' + nDup + '</span>' +
+        '<span class="badge kind-invalid">แถวที่ข้าม ' + skippedRows + '</span>' +
+      '</div>' +
+      (rows.length ? '<div class="preview-wrap"><table class="grid"><thead><tr><th>แถว</th><th>เบอร์</th><th>ชื่อ/หมายเหตุ</th><th>สถานะ</th><th>วันรอ</th><th>นัดตรวจซ้ำ</th><th>ที่มา</th><th>ผล</th></tr></thead><tbody>' +
+        rows.slice(0, MAX).map((x) => {
+          const r = x.r;
+          return '<tr><td data-label="แถว">' + esc(r.row) + '</td>' +
+            '<td class="c-head" data-label="เบอร์"><span class="phone">' + esc(fmtPhone(r.phone)) + '</span>' + (r.warning ? ' <span class="badge warn">' + esc(r.warning) + '</span>' : '') + '</td>' +
+            '<td data-label="ชื่อ/หมายเหตุ">' + (r.note !== undefined ? esc(r.note) : '<span class="muted">(ไม่มีคอลัมน์)</span>') + '</td>' +
+            '<td data-label="สถานะ">' + (r.status !== undefined ? stBadge(r.status) : '<span class="muted">(ไม่มีคอลัมน์)</span>') + '</td>' +
+            '<td data-label="วันรอ">' + (r.waitDays != null ? esc(r.waitDays) + ' วัน' : '<span class="muted">—</span>') + '</td>' +
+            '<td data-label="นัดตรวจซ้ำ">' + (r.recheckDate ? esc(fmtDate(r.recheckDate)) : '<span class="muted">—</span>') + '</td>' +
+            '<td data-label="ที่มา">' + previewSource(x, mode, idx) + '</td>' +
+            '<td data-label="ผล">' + kindHtml(x.kind) + '</td></tr>';
+        }).join('') + '</tbody></table></div>' +
+        (rows.length > MAX ? '<p class="hint">แสดง ' + MAX + ' แถวแรกจาก ' + rows.length + ' แถว (นำเข้าครบทุกแถว)</p>' : '')
+        : '<p class="muted">ไม่พบแถวที่มีเบอร์ถูกต้อง</p>') +
+      (csvPreview.issues.length ? '<h3>ปัญหาที่พบ (' + csvPreview.issues.length + ')</h3><ul class="issues">' +
+        csvPreview.issues.slice(0, 200).map((i) => '<li>แถว ' + esc(i.row) + (i.field ? ' · ' + esc(i.field) : '') + ': ' + esc(i.error) +
+          (i.raw ? ' <span class="muted">(“' + esc(i.raw) + '”)</span>' : '') + ' — ' + (i.skipped ? '<strong>ข้ามแถวนี้</strong>' : 'นำเข้าแถวนี้โดยเว้นค่าช่องนี้') + '</li>').join('') +
+        '</ul>' : '') +
+      '<div class="actions"><button type="button" class="primary" data-action="csv-commit"' + (actionable ? '' : ' disabled') + '>ยืนยันนำเข้า ' + actionable + ' เบอร์</button>' +
+      '<button type="button" data-action="csv-cancel">ยกเลิก</button></div>';
+  }
+  function csvCommit() {
+    if (!csvPreview) return;
+    const mode = csvMode();
+    const res = C.mergeRecords(state.records, csvPreview.rows, mode, { now: nowISO(), defaultSource: 'import' });
+    state.records = res.records;
+    csvPreview = null;
+    $('#csv-file').value = '';
+    commit('นำเข้าแล้ว: เพิ่ม ' + res.added + ' · เขียนทับ ' + res.updated + ' · ข้าม ' + res.skipped + ' · ซ้ำในไฟล์ ' + res.dupInput);
+    renderCsvPreview();
+  }
+
+  // ================= OCR tab =================
+  const ocrItems = [];
+  let ocrSeq = 0, ocrBusy = false, ocrCurrent = null, tessPromise = null, workerPromise = null;
+  const TESS_STATUS = {
+    'loading tesseract core': 'กำลังโหลดตัวอ่านข้อความ',
+    'initializing tesseract': 'กำลังเตรียมตัวอ่านข้อความ',
+    'initialized tesseract': 'เตรียมตัวอ่านข้อความแล้ว',
+    'loading language traineddata': 'กำลังโหลดข้อมูลภาษาไทย+อังกฤษ (ครั้งแรกอาจใช้เวลาสักครู่)',
+    'loading language traineddata (from cache)': 'กำลังโหลดข้อมูลภาษาจากแคช',
+    'loaded language traineddata': 'โหลดข้อมูลภาษาแล้ว',
+    'initializing api': 'กำลังเริ่มต้น',
+    'initialized api': 'พร้อมอ่าน',
+    'recognizing text': 'กำลังอ่านข้อความในภาพ'
+  };
+  function setOcrGlobal(t) { $('#ocr-global').textContent = t || ''; }
+  function loadTesseract() {
+    if (window.Tesseract) return Promise.resolve(window.Tesseract);
+    if (tessPromise) return tessPromise;
+    tessPromise = new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = TESSERACT_URL;
+      s.async = true;
+      s.onload = () => (window.Tesseract ? resolve(window.Tesseract) : reject(new Error('โหลด Tesseract.js แล้วแต่ใช้งานไม่ได้')));
+      s.onerror = () => { s.remove(); reject(new Error('โหลดไลบรารี OCR ไม่ได้ — ต้องต่ออินเทอร์เน็ตเพื่อดาวน์โหลดจาก jsDelivr')); };
+      document.head.appendChild(s);
+    }).catch((e) => { tessPromise = null; throw e; });
+    return tessPromise;
+  }
+  function getWorker() {
+    if (workerPromise) return workerPromise;
+    setOcrGlobal('กำลังโหลดไลบรารี OCR (Tesseract.js 5.1.1)…');
+    workerPromise = loadTesseract()
+      .then((T) => T.createWorker(OCR_LANG, 1, { logger: onTessLog, errorHandler: () => {} }))
+      .then((w) => { setOcrGlobal(''); return w; })
+      .catch((e) => { workerPromise = null; setOcrGlobal(''); throw e; });
+    return workerPromise;
+  }
+  function onTessLog(m) {
+    const it = ocrCurrent;
+    if (!it || !m) return;
+    it.statusText = TESS_STATUS[m.status] || String(m.status || '');
+    it.progress = typeof m.progress === 'number' ? m.progress : 0;
+    updateOcrProgress(it);
+  }
+  function errMsg(e) { return (e && e.message) ? e.message : String(e || 'เกิดข้อผิดพลาด'); }
+
+  function addOcrFiles(list, fromClipboard) {
+    const all = Array.from(list || []);
+    const files = all.filter((f) => f && /^image\//.test(f.type));
+    if (!files.length) { toast('ไม่พบไฟล์ภาพ (รองรับ PNG, JPG, WebP, BMP)', 'error'); return; }
+    if (files.length < all.length) toast('ข้าม ' + (all.length - files.length) + ' ไฟล์ที่ไม่ใช่ภาพ');
+    files.forEach((f) => {
+      ocrItems.push({
+        id: 'o' + (++ocrSeq),
+        name: fromClipboard ? 'ภาพจากคลิปบอร์ด ' + ocrSeq : (f.name || 'ภาพ ' + ocrSeq),
+        file: f, url: URL.createObjectURL(f),
+        fileDate: !fromClipboard && f.lastModified ? C.todayISO(new Date(f.lastModified)) : null,
+        state: 'queued', progress: 0, statusText: 'รอคิว', text: '', confidence: null, lowWords: [], error: '',
+        phones: [], phoneSeq: 0, waitInfo: null, waitDays: '', status: '', message: '', waitStart: '', recheck: '', recheckManual: false,
+        saveError: '', savedNote: ''
+      });
+    });
+    renderOcrList();
+    processOcrQueue();
+  }
+  function processOcrQueue() {
+    if (ocrBusy) return;
+    const it = ocrItems.find((i) => i.state === 'queued');
+    if (!it) return;
+    ocrBusy = true;
+    ocrCurrent = it;
+    it.state = 'running'; it.progress = 0; it.statusText = 'กำลังเตรียมตัวอ่านข้อความ';
+    refreshOcrCard(it);
+    getWorker()
+      .then((w) => w.recognize(it.file))
+      .then((res) => finishOcr(it, (res && res.data) || {}))
+      .catch((e) => { it.state = 'error'; it.error = errMsg(e); })
+      .then(() => {
+        ocrBusy = false;
+        ocrCurrent = null;
+        if (ocrItems.indexOf(it) >= 0) refreshOcrCard(it);
+        processOcrQueue();
+      });
+  }
+  function collectWords(data) {
+    if (Array.isArray(data.words) && data.words.length) return data.words;
+    const out = [];
+    (data.blocks || []).forEach((b) => (b.paragraphs || []).forEach((p) => (p.lines || []).forEach((l) => (l.words || []).forEach((w) => out.push(w)))));
+    return out;
+  }
+  function finishOcr(it, data) {
+    const words = collectWords(data).filter((w) => w && typeof w.confidence === 'number');
+    let conf = typeof data.confidence === 'number' ? data.confidence : null;
+    if (conf == null && words.length) conf = words.reduce((s, w) => s + w.confidence, 0) / words.length;
+    it.text = String(data.text || '');
+    it.confidence = conf == null ? 0 : Math.round(conf);
+    it.lowWords = words.filter((w) => /[0-9๐-๙]/.test(w.text || '') && w.confidence < LOW_CONF)
+      .map((w) => ({ text: String(w.text), conf: Math.round(w.confidence) }));
+    it.state = 'done';
+    it.message = it.text.trim();
+    it.lastParsedText = it.message;
+    applyExtraction(it);
+  }
+  function lowConfFor(raw, lowWords) {
+    const d = C.thaiDigitsToArabic(raw).replace(/\D/g, '');
+    return lowWords.some((w) => {
+      const wd = C.thaiDigitsToArabic(w.text).replace(/\D/g, '');
+      return wd.length >= 2 && d.indexOf(wd) >= 0;
+    });
+  }
+  function applyExtraction(it) {
+    const ex = C.extractFromOcrText(it.text);
+    it.phones = ex.phones.map((p) => ({ key: ++it.phoneSeq, raw: p.raw, value: p.ok ? p.phone : p.raw, selected: !!p.ok, lowConf: lowConfFor(p.raw, it.lowWords) }));
+    it.waitInfo = { match: ex.waitMatch, ambiguous: ex.waitAmbiguous, candidates: ex.waitCandidates || [] };
+    it.waitDays = ex.waitDays == null ? '' : String(ex.waitDays);
+    it.recheckManual = false;
+    recomputeOcrRecheck(it);
+  }
+  function ocrWait(it) {
+    const v = C.thaiDigitsToArabic(String(it.waitDays)).trim();
+    if (v === '') return { ok: true, value: null };
+    return /^\d+$/.test(v) && parseInt(v, 10) <= 3650 ? { ok: true, value: parseInt(v, 10) } : { ok: false };
+  }
+  function ocrComputed(it) {
+    const wd = ocrWait(it);
+    return wd.ok && C.isValidISODate(it.waitStart) ? C.computeRecheckDate(it.waitStart, wd.value) : null;
+  }
+  function recomputeOcrRecheck(it) { if (!it.recheckManual) it.recheck = ocrComputed(it) || ''; }
+  function ocrPhoneState(p) {
+    const r = C.normalizePhone(p.value);
+    if (!r.ok) return { ok: false, html: '<span class="badge kind-invalid">ไม่ถูกต้อง</span><div class="small err">' + esc(r.error) + '</div>' };
+    const exists = !!phoneIndex()[r.phone];
+    return {
+      ok: true, phone: r.phone,
+      html: (exists ? '<span class="badge kind-over">มีอยู่แล้ว — จะบันทึกผลทับ</span>' : '<span class="badge kind-new">ใหม่</span>') +
+        (r.warning ? ' <span class="badge warn">' + esc(r.warning) + '</span>' : '') +
+        '<div class="small muted">บันทึกเป็น ' + esc(fmtPhone(r.phone)) + '</div>'
+    };
+  }
+  function ocrSelectedPhones(it) {
+    const seen = {}, out = [];
+    it.phones.forEach((p) => {
+      if (!p.selected) return;
+      const r = C.normalizePhone(p.value);
+      if (r.ok && !seen[r.phone]) { seen[r.phone] = true; out.push(r.phone); }
+    });
+    return out;
+  }
+  function ocrCalcText(it) {
+    const wd = ocrWait(it);
+    const comp = ocrComputed(it);
+    if (!wd.ok) return 'จำนวนวันรอต้องเป็นจำนวนเต็มตั้งแต่ 0 หรือเว้นว่าง';
+    if (it.recheckManual && comp && it.recheck !== comp) return 'คุณแก้วันนัดเอง — ค่าที่คำนวณได้คือ ' + fmtDate(comp);
+    if (comp) return 'คำนวณ: วันที่เห็นข้อความ + ' + wd.value + ' วัน = ' + fmtDate(comp);
+    if (wd.value != null && !it.waitStart) return 'กรอก “วันที่เห็นข้อความ” เพื่อคำนวณวันนัดตรวจซ้ำ';
+    return 'ไม่มีจำนวนวันรอ — วันนัดว่างได้ หรือกำหนดเอง';
+  }
+
+  function ocrCardHtml(it) {
+    const id = esc(it.id);
+    const stateBadge = {
+      queued: '<span class="badge">รอคิว</span>',
+      running: '<span class="badge due-soon">กำลังอ่าน</span>',
+      done: '<span class="badge kind-new">อ่านแล้ว</span>',
+      error: '<span class="badge kind-invalid">ผิดพลาด</span>'
+    }[it.state] || '';
+    let left = '<figure class="ocr-img"><img src="' + esc(it.url) + '" alt="ภาพที่เลือก: ' + esc(it.name) + '"></figure>';
+    let right = '';
+    if (it.state === 'queued' || it.state === 'running') {
+      right = '<div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + Math.round(it.progress * 100) + '"><div class="bar" style="width:' + Math.round(it.progress * 100) + '%"></div></div>' +
+        '<p class="hint ocr-status">' + esc(it.statusText) + (it.state === 'running' && it.progress ? ' ' + Math.round(it.progress * 100) + '%' : '') + '</p>';
+    } else if (it.state === 'error') {
+      right = '<div class="banner banner-danger">อ่านภาพไม่สำเร็จ: ' + esc(it.error) + '</div>' +
+        '<div class="actions"><button type="button" data-action="ocr-retry" data-ocr="' + id + '">ลองอ่านใหม่</button></div>';
+    } else {
+      const low = it.confidence < LOW_CONF || it.lowWords.length > 0;
+      right = '<p>ความเชื่อมั่นเฉลี่ย <span class="conf">' + esc(it.confidence) + '%</span></p>' +
+        (low ? '<div class="banner banner-warn"><strong>อ่านไม่ชัด โปรดตรวจ</strong> — ' +
+          (it.confidence < LOW_CONF ? 'ความเชื่อมั่นเฉลี่ยต่ำกว่า ' + LOW_CONF + '%' : '') +
+          (it.confidence < LOW_CONF && it.lowWords.length ? ' และ' : '') +
+          (it.lowWords.length ? 'มีตัวเลขที่ความเชื่อมั่นต่ำ: ' + it.lowWords.slice(0, 12).map((w) => '“' + esc(w.text) + '” (' + w.conf + '%)').join(', ') : '') +
+          '</div>' : '') +
+        (it.text.trim() ? '' : '<p class="muted">ไม่พบข้อความในภาพ</p>') +
+        '<div class="ocr-text"><label>ข้อความที่อ่านได้ (แก้ได้)<textarea data-ocr="' + id + '" data-f="text" rows="8">' + esc(it.text) + '</textarea></label></div>' +
+        '<div class="actions"><button type="button" class="sm" data-action="ocr-reparse" data-ocr="' + id + '">หาเบอร์/วันรอจากข้อความนี้ใหม่</button></div>';
+    }
+    let result = '';
+    if (it.state === 'done') result = '<div class="ocr-result">' + ocrResultHtml(it) + '</div>';
+    return '<article class="ocr-card" id="ocr-' + id + '">' +
+      '<div class="ocr-top"><span class="name">' + esc(it.name) + '</span>' + stateBadge +
+      '<button type="button" class="sm danger-ghost" data-action="ocr-remove" data-ocr="' + id + '"' + (it.state === 'running' ? ' disabled title="รออ่านเสร็จก่อน"' : '') + '>นำภาพออก</button></div>' +
+      '<div class="ocr-body"><div class="ocr-col">' + left + '</div><div class="ocr-col">' + right + '</div></div>' + result + '</article>';
+  }
+  function ocrPhoneRow(it, p) {
+    const s = ocrPhoneState(p);
+    const id = esc(it.id);
+    return '<tr data-k="' + p.key + '">' +
+      '<td class="c-sel"><input type="checkbox" data-ocr="' + id + '" data-f="sel" data-k="' + p.key + '"' + (p.selected && s.ok ? ' checked' : '') + (s.ok ? '' : ' disabled') + ' aria-label="เลือกเบอร์นี้"></td>' +
+      '<td class="c-head" data-label="เบอร์"><input type="text" inputmode="tel" autocomplete="off" data-ocr="' + id + '" data-f="phone" data-k="' + p.key + '" value="' + esc(p.value) + '" aria-label="เบอร์ (แก้ได้)">' +
+        (p.lowConf ? '<span class="badge warn">ความเชื่อมั่นต่ำ — เทียบกับภาพ</span>' : '') +
+        (p.raw && p.raw !== p.value ? '<div class="small muted">อ่านได้: ' + esc(p.raw) + '</div>' : '') + '</td>' +
+      '<td class="ph-status" data-label="ผล">' + s.html + '</td>' +
+      '<td class="c-act"><button type="button" class="sm danger-ghost" data-action="ocr-del-phone" data-ocr="' + id + '" data-k="' + p.key + '">เอาออก</button></td></tr>';
+  }
+  function ocrResultHtml(it) {
+    const id = esc(it.id);
+    const wi = it.waitInfo || { candidates: [] };
+    let waitHint;
+    if (wi.ambiguous) {
+      waitHint = '<div class="banner banner-warn small">พบจำนวนวันหลายค่าที่ไม่ตรงกัน จึงไม่เลือกให้ — ดูภาพแล้วเลือกหรือกรอกเอง: <span class="inline-btns">' +
+        wi.candidates.map((c) => '<button type="button" class="chip" data-action="ocr-wait-cand" data-ocr="' + id + '" data-v="' + esc(c.value) + '">' + esc(c.value) + ' วัน <span class="muted">(“' + esc(c.match) + '”)</span></button>').join('') + '</span></div>';
+    } else if (wi.match) {
+      waitHint = '<p class="hint">พบในภาพ: “' + esc(wi.match) + '” — ตรวจกับภาพก่อนบันทึก</p>';
+    } else {
+      waitHint = '<p class="hint">ไม่พบจำนวนวันรอในข้อความ — เว้นว่างได้ หรือกรอกเองตามภาพ</p>';
+    }
+    const nSel = ocrSelectedPhones(it).length;
+    return '<h3>เบอร์ที่พบ (' + it.phones.length + ')</h3>' +
+      (it.phones.length
+        ? '<div class="table-wrap"><table class="grid"><thead><tr><th class="c-sel"><span class="visually-hidden">เลือก</span></th><th>เบอร์ (แก้ได้)</th><th>ผล</th><th><span class="visually-hidden">เอาออก</span></th></tr></thead><tbody>' +
+          it.phones.map((p) => ocrPhoneRow(it, p)).join('') + '</tbody></table></div>'
+        : '<p class="muted">ไม่พบเบอร์ในข้อความ</p>') +
+      '<div class="actions"><button type="button" class="sm" data-action="ocr-add-phone" data-ocr="' + id + '">+ เพิ่มเบอร์ที่อ่านไม่เจอ</button></div>' +
+      '<div class="row2 field">' +
+        '<div><label>จำนวนวันรอ<input type="number" min="0" max="3650" step="1" inputmode="numeric" placeholder="เว้นว่างได้" data-ocr="' + id + '" data-f="waitDays" value="' + esc(it.waitDays) + '"></label>' + waitHint + '</div>' +
+        '<div><label>สถานะ<select data-ocr="' + id + '" data-f="status">' +
+          '<option value="">— เลือกให้ตรงกับข้อความในภาพ —</option>' +
+          C.STATUSES.map((s) => '<option value="' + s + '"' + (it.status === s ? ' selected' : '') + '>' + esc(C.STATUS_LABELS[s]) + '</option>').join('') +
+        '</select></label></div>' +
+      '</div>' +
+      '<div class="row2 field">' +
+        '<div><label>วันที่เห็นข้อความ<input type="date" data-ocr="' + id + '" data-f="waitStart" value="' + esc(it.waitStart) + '"></label>' +
+          '<div class="inline-btns"><button type="button" class="sm" data-action="ocr-date" data-which="today" data-ocr="' + id + '">วันนี้</button>' +
+          (it.fileDate ? '<button type="button" class="sm" data-action="ocr-date" data-which="file" data-ocr="' + id + '">วันที่ของไฟล์ (' + esc(fmtDate(it.fileDate)) + ')</button>' : '') + '</div></div>' +
+        '<div><label>วันนัดตรวจซ้ำ (คำนวณ/แก้ได้)<input type="date" data-ocr="' + id + '" data-f="recheck" value="' + esc(it.recheck) + '"></label>' +
+          '<p class="hint" data-calc="' + id + '">' + esc(ocrCalcText(it)) + '</p>' +
+          '<div class="inline-btns"><button type="button" class="sm" data-action="ocr-recheck-auto" data-ocr="' + id + '"' + (it.recheckManual ? '' : ' hidden') + '>ใช้ค่าที่คำนวณ</button></div></div>' +
+      '</div>' +
+      '<div class="field"><label>ข้อความตอบกลับที่จะบันทึก<textarea rows="3" data-ocr="' + id + '" data-f="message">' + esc(it.message) + '</textarea></label></div>' +
+      '<p class="form-error" data-err="' + id + '" role="alert">' + esc(it.saveError) + '</p>' +
+      (it.savedNote ? '<div class="saved-note">' + esc(it.savedNote) + '</div>' : '') +
+      '<div class="actions"><button type="button" class="primary" data-action="ocr-save" data-ocr="' + id + '" data-save="' + id + '"' + (nSel ? '' : ' disabled') + '>' +
+        (it.savedNote ? 'บันทึกอีกครั้ง ' : 'ยืนยันบันทึก ') + nSel + ' เบอร์ที่เลือก</button></div>' +
+      '<p class="hint">ผลที่บันทึกจะมีที่มาเป็น “อ่านจากภาพ (ผู้ใช้ยืนยัน)” — ไม่ใช่ผลตรวจจาก LINE</p>';
+  }
+  function renderOcrList() {
+    $('#ocr-list').innerHTML = ocrItems.map(ocrCardHtml).join('');
+    $('#ocr-tools').hidden = ocrItems.length === 0;
+  }
+  function refreshOcrCard(it) {
+    const el = document.getElementById('ocr-' + it.id);
+    if (!el) { renderOcrList(); return; }
+    el.outerHTML = ocrCardHtml(it);
+  }
+  function updateOcrProgress(it) {
+    const el = document.getElementById('ocr-' + it.id);
+    if (!el) return;
+    const bar = el.querySelector('.progress .bar');
+    const pb = el.querySelector('.progress');
+    const st = el.querySelector('.ocr-status');
+    const pct = Math.round((it.progress || 0) * 100);
+    if (bar) bar.style.width = pct + '%';
+    if (pb) pb.setAttribute('aria-valuenow', String(pct));
+    if (st) st.textContent = it.statusText + (pct ? ' ' + pct + '%' : '');
+  }
+  function patchOcrDerived(it) {
+    const card = document.getElementById('ocr-' + it.id);
+    if (!card) return;
+    const rc = card.querySelector('[data-f="recheck"]');
+    if (rc && rc.value !== it.recheck) rc.value = it.recheck;
+    const calc = card.querySelector('[data-calc]');
+    if (calc) calc.textContent = ocrCalcText(it);
+    const auto = card.querySelector('[data-action="ocr-recheck-auto"]');
+    if (auto) auto.hidden = !it.recheckManual;
+    const n = ocrSelectedPhones(it).length;
+    const btn = card.querySelector('[data-save]');
+    if (btn) { btn.disabled = n === 0; btn.textContent = (it.savedNote ? 'บันทึกอีกครั้ง ' : 'ยืนยันบันทึก ') + n + ' เบอร์ที่เลือก'; }
+  }
+  function patchOcrPhone(it, p) {
+    const card = document.getElementById('ocr-' + it.id);
+    const row = card && card.querySelector('tr[data-k="' + p.key + '"]');
+    if (!row) return;
+    const s = ocrPhoneState(p);
+    row.querySelector('.ph-status').innerHTML = s.html;
+    const cb = row.querySelector('[data-f="sel"]');
+    cb.disabled = !s.ok;
+    cb.checked = s.ok && p.selected;
+  }
+  const findOcr = (id) => ocrItems.find((i) => i.id === id) || null;
+  function onOcrInput(e) {
+    const t = e.target;
+    const it = t.dataset && t.dataset.ocr ? findOcr(t.dataset.ocr) : null;
+    if (!it) return;
+    const f = t.dataset.f;
+    if (f === 'text') { it.text = t.value; return; }
+    if (f === 'message') { it.message = t.value; return; }
+    if (f === 'status') { it.status = t.value; return; }
+    if (f === 'phone' || f === 'sel') {
+      const p = it.phones.find((x) => String(x.key) === t.dataset.k);
+      if (!p) return;
+      if (f === 'phone') { p.value = t.value; if (!p.selected && C.normalizePhone(p.value).ok && p.manual) p.selected = true; patchOcrPhone(it, p); }
+      else p.selected = t.checked;
+      patchOcrDerived(it);
+      return;
+    }
+    if (f === 'waitDays') it.waitDays = (t.validity && t.validity.badInput) ? 'x' : t.value;
+    if (f === 'waitStart') it.waitStart = t.value;
+    if (f === 'recheck') { it.recheck = t.value; it.recheckManual = t.value !== (ocrComputed(it) || ''); }
+    recomputeOcrRecheck(it);
+    patchOcrDerived(it);
+  }
+  function ocrSave(it) {
+    const errEl = document.querySelector('[data-err="' + it.id + '"]');
+    const fail = (m) => { it.saveError = m; if (errEl) errEl.textContent = m; };
+    const phones = ocrSelectedPhones(it);
+    if (!phones.length) return fail('เลือกเบอร์ที่ถูกต้องอย่างน้อย 1 เบอร์');
+    if (C.STATUSES.indexOf(it.status) < 0) return fail('โปรดเลือกสถานะให้ตรงกับข้อความในภาพ');
+    const wd = ocrWait(it);
+    if (!wd.ok) return fail('จำนวนวันรอต้องเป็นจำนวนเต็มตั้งแต่ 0 ถึง 3650 หรือเว้นว่าง');
+    if (it.waitStart && !C.isValidISODate(it.waitStart)) return fail('วันที่เห็นข้อความไม่ถูกต้อง');
+    if (it.recheck && !C.isValidISODate(it.recheck)) return fail('วันนัดตรวจซ้ำไม่ถูกต้อง');
+    const now = nowISO();
+    const rows = phones.map((ph) => ({
+      phone: ph, status: it.status, message: it.message.trim(), waitDays: wd.value,
+      waitStart: it.waitStart || null, recheckDate: it.recheck || null, source: 'ocr', checkedAt: now
+    }));
+    const res = C.mergeRecords(state.records, rows, 'overwrite', { now: now, defaultSource: 'ocr' });
+    state.records = res.records;
+    it.saveError = '';
+    it.savedNote = 'บันทึกแล้ว: เพิ่มใหม่ ' + res.added + ' · บันทึกผลทับ ' + res.updated + ' เบอร์';
+    commit(it.savedNote);
+    ocrItems.forEach((x) => { if (x.state === 'done') refreshOcrCard(x); });
+  }
+  function removeOcr(it) {
+    if (it.state === 'running') return;
+    URL.revokeObjectURL(it.url);
+    ocrItems.splice(ocrItems.indexOf(it), 1);
+    renderOcrList();
+  }
+  async function clearOcr() {
+    if (!ocrItems.length) return;
+    const ok = await confirmDialog({ title: 'นำภาพทั้งหมดออก?', message: 'ข้อความที่อ่านได้และยังไม่บันทึกจะหายไป (ภาพที่กำลังอ่านอยู่จะยังคงไว้)', okText: 'นำออก', danger: true });
+    if (!ok) return;
+    ocrItems.slice().forEach((it) => { if (it.state !== 'running') { URL.revokeObjectURL(it.url); ocrItems.splice(ocrItems.indexOf(it), 1); } });
+    renderOcrList();
+  }
+
+  // ================= export tab =================
+  const EXPORTS = [
+    { scope: 'all', title: 'ทั้งหมด', desc: () => 'ทุกเบอร์ในรายการ', get: () => sortRecords(state.records, 'phone') },
+    { scope: 'filtered', title: 'ตามตัวกรองปัจจุบัน', desc: () => filterDescription() + ' — ตั้งค่าที่แท็บ “รายการเบอร์”', get: visibleRecords },
+    { scope: 'recheck', title: 'เฉพาะที่ต้องตรวจซ้ำ', desc: () => 'เลยกำหนด + ถึงกำหนดวันนี้ + ใกล้ถึงกำหนด (ภายใน ' + soonDays() + ' วัน)', get: () => C.filterRecords(state.records, { due: 'recheck', today: today(), soonDays: soonDays() }).sort(byRecheck) },
+    { scope: 'waiting', title: 'เฉพาะสถานะ “ต้องรอ”', desc: () => 'สถานะ ' + C.STATUS_LABELS.waiting, get: () => sortRecords(C.filterRecords(state.records, { status: 'waiting' }), 'recheck') }
+  ];
+  function renderExport() {
+    $('#export-grid').innerHTML = EXPORTS.map((x) => {
+      const n = x.get().length;
+      return '<div class="export-item"><strong>' + esc(x.title) + '</strong><span class="count">' + n + ' <span class="small muted">เบอร์</span></span>' +
+        '<p class="small muted">' + esc(x.desc()) + '</p>' +
+        '<button type="button" class="primary" data-action="export" data-scope="' + x.scope + '"' + (n ? '' : ' disabled') + '>ดาวน์โหลด CSV</button></div>';
+    }).join('');
+  }
+  function doExport(scope) {
+    const x = EXPORTS.find((e) => e.scope === scope);
+    if (!x) return;
+    const recs = x.get();
+    if (!recs.length) { toast('ไม่มีเบอร์ในกลุ่มนี้', 'error'); return; }
+    const name = 'line-numbers-' + scope + '-' + today() + '.csv';
+    const blob = new Blob([C.recordsToCSV(recs)], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 15000);
+    toast('ส่งออก ' + recs.length + ' เบอร์ → ' + name);
+  }
+
+  async function wipeAll() {
+    const n = state.records.length;
+    if (!n) return;
+    const ok = await confirmDialog({ title: 'ล้างข้อมูลทั้งหมด ' + n + ' เบอร์?', message: 'ทุกเบอร์และผลที่บันทึกในเบราว์เซอร์นี้จะถูกลบ ย้อนกลับไม่ได้ — ถ้ายังไม่ได้ส่งออก CSV ให้กดยกเลิกแล้วไปที่แท็บ “ส่งออก” ก่อน', okText: 'ล้างข้อมูลทั้งหมด', danger: true });
+    if (!ok) return;
+    state.records = [];
+    selected = {};
+    commit('ล้างข้อมูลทั้งหมดแล้ว');
+  }
+
+  // ================= events =================
+  document.addEventListener('click', (e) => {
+    const close = e.target.closest('[data-close]');
+    if (close) { const d = close.closest('dialog'); if (d) closeDialog(d); return; }
+    const b = e.target.closest('[data-action]');
+    if (!b || b.disabled) return;
+    const a = b.dataset.action;
+    const id = b.dataset.id;
+    const it = b.dataset.ocr ? findOcr(b.dataset.ocr) : null;
+    switch (a) {
+      case 'stat': {
+        const s = b.dataset.stat;
+        const base = { q: '', status: 'all', source: 'all', due: 'all' };
+        if (s === 'waiting') base.status = 'waiting';
+        if (s === 'due') base.due = 'due';
+        if (s === 'soon') base.due = 'soon';
+        setFilters(base);
+        break;
+      }
+      case 'due-show': setFilters({ q: '', status: 'all', source: 'all', due: b.dataset.due, sort: 'recheck' }); break;
+      case 'filters-reset': setFilters({ q: '', status: 'all', source: 'all', due: 'all' }); break;
+      case 'record-result': openResult(id); break;
+      case 'record-edit': openEdit(id); break;
+      case 'record-delete': deleteRecord(id); break;
+      case 'bulk-status': bulkStatus(); break;
+      case 'bulk-delete': bulkDelete(); break;
+      case 'paste-preview':
+        pastePreview = { items: [] };
+        renderPastePreview();
+        break;
+      case 'paste-cancel': pastePreview = null; renderPastePreview(); break;
+      case 'paste-clear': $('#paste-text').value = ''; $('#paste-note').value = ''; pastePreview = null; renderPastePreview(); break;
+      case 'paste-commit': pasteCommit(); break;
+      case 'csv-commit': csvCommit(); break;
+      case 'csv-cancel': csvPreview = null; $('#csv-file').value = ''; renderCsvPreview(); break;
+      case 'ocr-pick': $('#ocr-file').click(); break;
+      case 'ocr-clear': clearOcr(); break;
+      case 'ocr-remove': if (it) removeOcr(it); break;
+      case 'ocr-retry': if (it) { it.state = 'queued'; it.error = ''; it.statusText = 'รอคิว'; refreshOcrCard(it); processOcrQueue(); } break;
+      case 'ocr-reparse':
+        if (it) {
+          const old = it.message;
+          if (old.trim() === '' || old === it.lastParsedText) it.message = it.text.trim();
+          applyExtraction(it);
+          it.lastParsedText = it.text.trim();
+          refreshOcrCard(it);
+        }
+        break;
+      case 'ocr-wait-cand': if (it) { it.waitDays = String(b.dataset.v); it.recheckManual = false; recomputeOcrRecheck(it); refreshOcrCard(it); } break;
+      case 'ocr-date':
+        if (it) {
+          it.waitStart = b.dataset.which === 'file' && it.fileDate ? it.fileDate : today();
+          recomputeOcrRecheck(it);
+          const inp = document.querySelector('#ocr-' + it.id + ' [data-f="waitStart"]');
+          if (inp) inp.value = it.waitStart;
+          patchOcrDerived(it);
+        }
+        break;
+      case 'ocr-recheck-auto': if (it) { it.recheckManual = false; recomputeOcrRecheck(it); patchOcrDerived(it); } break;
+      case 'ocr-add-phone':
+        if (it) {
+          const p = { key: ++it.phoneSeq, raw: '', value: '', selected: true, lowConf: false, manual: true };
+          it.phones.push(p);
+          refreshOcrCard(it);
+          const inp = document.querySelector('#ocr-' + it.id + ' tr[data-k="' + p.key + '"] [data-f="phone"]');
+          if (inp) inp.focus();
+        }
+        break;
+      case 'ocr-del-phone':
+        if (it) { it.phones = it.phones.filter((p) => String(p.key) !== b.dataset.k); refreshOcrCard(it); }
+        break;
+      case 'ocr-save': if (it) ocrSave(it); break;
+      case 'export': doExport(b.dataset.scope); break;
+      case 'wipe-all': wipeAll(); break;
+    }
+  });
+
+  // list controls
+  $('#f-q').addEventListener('input', (e) => { listUI.q = e.target.value; renderTable(); });
+  [['#f-status', 'status'], ['#f-source', 'source'], ['#f-due', 'due'], ['#f-sort', 'sort']].forEach((p) => {
+    $(p[0]).addEventListener('change', (e) => { listUI[p[1]] = e.target.value; renderTable(); });
+  });
+  $('#f-soon').addEventListener('change', (e) => {
+    const v = C.thaiDigitsToArabic(e.target.value).trim();
+    if (!/^\d+$/.test(v) || parseInt(v, 10) > 365) { e.target.value = String(soonDays()); toast('ใส่จำนวนวันเป็นจำนวนเต็ม 0–365', 'error'); return; }
+    state.settings.soonDays = parseInt(v, 10);
+    commit('“ใกล้ถึงกำหนด” = ภายใน ' + state.settings.soonDays + ' วัน');
+  });
+  $('#table-wrap').addEventListener('change', (e) => {
+    const cb = e.target.closest('.row-check');
+    if (!cb) return;
+    if (cb.checked) selected[cb.dataset.id] = true; else delete selected[cb.dataset.id];
+    const tr = cb.closest('tr');
+    if (tr) tr.classList.toggle('is-selected', cb.checked);
+    updateBulkBar();
+  });
+  $('#sel-all').addEventListener('change', (e) => {
+    selected = {};
+    if (e.target.checked) visibleIds.forEach((id) => { selected[id] = true; });
+    renderTable();
+  });
+
+  // add tab
+  $('#paste-text').addEventListener('input', () => { if (pastePreview) renderPastePreview(); });
+  $('#csv-file').addEventListener('change', (e) => onCsvFile(e.target.files && e.target.files[0]));
+  $$('input[name="csv-mode"]').forEach((r) => r.addEventListener('change', () => { if (csvPreview) renderCsvPreview(); }));
+
+  // OCR inputs
+  $('#ocr-list').addEventListener('input', onOcrInput);
+  $('#ocr-list').addEventListener('change', onOcrInput);
+  $('#ocr-file').addEventListener('change', (e) => { addOcrFiles(e.target.files, false); e.target.value = ''; });
+  const dz = $('#dropzone');
+  dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('is-over'); });
+  dz.addEventListener('dragleave', (e) => { if (!dz.contains(e.relatedTarget)) dz.classList.remove('is-over'); });
+  dz.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dz.classList.remove('is-over');
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) addOcrFiles(e.dataTransfer.files, false);
+  });
+  // stop the browser from opening a file dropped outside the drop zone
+  window.addEventListener('dragover', (e) => { if (e.dataTransfer && Array.from(e.dataTransfer.types || []).indexOf('Files') >= 0) e.preventDefault(); });
+  window.addEventListener('drop', (e) => {
+    if (e.target.closest && e.target.closest('#dropzone')) return;
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+      e.preventDefault();
+      if (currentTab() === 'ocr') addOcrFiles(e.dataTransfer.files, false);
+    }
+  });
+  document.addEventListener('paste', (e) => {
+    if (currentTab() !== 'ocr' || !e.clipboardData) return;
+    const files = Array.from(e.clipboardData.files || []).filter((f) => /^image\//.test(f.type));
+    if (!files.length) return;
+    e.preventDefault();
+    addOcrFiles(files, true);
+  });
+
+  // other tabs changing the same storage
+  window.addEventListener('storage', (e) => {
+    if (e.key !== C.STORAGE_KEY || e.newValue == null) return;
+    try {
+      state = C.sanitizeState(JSON.parse(e.newValue));
+      syncFilterControls();
+      renderAll();
+      toast('อัปเดตข้อมูลจากแท็บอื่นแล้ว');
+    } catch (err) { /* ignore unreadable data from another tab */ }
+  });
+
+  // ================= init =================
+  fillSelect($('#f-status'), [['all', 'ทุกสถานะ']].concat(statusOpts()), 'all');
+  fillSelect($('#f-source'), [['all', 'ทุกที่มา']].concat(sourceOpts()), 'all');
+  fillSelect($('#f-due'), DUE_OPTIONS, 'all');
+  fillSelect($('#f-sort'), SORT_OPTIONS, 'updated');
+  fillSelect($('#bulk-status'), statusOpts(), 'verified');
+  bindResultDialog();
+  bindEditDialog();
+  syncFilterControls();
+  renderAll();
+  showTab();
+  if (startupNotice) toast(startupNotice, 'error');
+})();
+</script>
+</body>
+</html>
